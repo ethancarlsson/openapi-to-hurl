@@ -3,7 +3,10 @@ use hurl_core::ast::{
     TemplateElement, Version, VersionValue, Whitespace,
 };
 use oas3::{
-    spec::{Components, FromRef, ObjectOrReference, Parameter, PathItem, RefError, SchemaType},
+    spec::{
+        Components, FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError,
+        SchemaType,
+    },
     Schema, Spec,
 };
 
@@ -14,32 +17,77 @@ pub struct HurlFiles {
     pub errors: Vec<RefError>,
 }
 
-pub fn to_hurl_files(path: OApiPath, spec: &Spec, components: &Option<Components>) -> HurlFiles {
+pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Components>) -> HurlFiles {
     let mut hurl_files = vec![];
     let mut errors = vec![];
 
-    // TODO: implement other HTTP methods
-    match to_get_file(path, &spec, components) {
-        Ok(file) => match file {
-            Some(f) => hurl_files.push(f),
-            None => (),
+    match &path.1.get {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::GET) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
         },
-        Err(e) => errors.extend(e),
+        None => (),
     }
+
+    match &path.1.post {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::POST) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
+        },
+        None => (),
+    }
+
+    match &path.1.put {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::PUT) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
+        },
+        None => (),
+    }
+
+    match &path.1.patch {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::PATCH) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
+        },
+        None => (),
+    }
+
+    match &path.1.options {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::OPTIONS) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
+        },
+        None => (),
+    }
+
+
+    match &path.1.delete {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::DELETE) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
+        },
+        None => (),
+    }
+
+    match &path.1.head {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::HEAD) {
+            Ok(file) => hurl_files.push(file),
+            Err(e) => errors.extend(e),
+        },
+        None => (),
+    }
+
 
     return HurlFiles { hurl_files, errors };
 }
 
-fn to_get_file(
+fn to_file(
     path: OApiPath,
     spec: &Spec,
-    _components: &Option<Components>,
-) -> Result<Option<HurlFile>, Vec<RefError>> {
-    let operation = match &path.1.get {
-        Some(o) => o,
-        None => return Ok(None),
-    };
-
+    operation: &Operation,
+    method: HttpMethod,
+) -> Result<HurlFile, Vec<RefError>> {
     let param_result_iter = operation.parameters.iter().map(|p| match p {
         ObjectOrReference::Object(p) => Ok(p.clone()),
         ObjectOrReference::Ref { ref_path } => Parameter::from_ref(&spec, &ref_path),
@@ -118,7 +166,7 @@ fn to_get_file(
                 value: "".to_string(),
                 source_info: empty_source_info(),
             },
-            method: Method(HttpMethod::GET.to_string()),
+            method: Method(method.to_string()),
             space1: Whitespace {
                 value: " ".to_string(),
                 source_info: empty_source_info(),
@@ -173,10 +221,10 @@ fn to_get_file(
         }),
     };
 
-    Ok(Some(HurlFile {
+    Ok(HurlFile {
         entries: vec![entry],
         line_terminators: vec![],
-    }))
+    })
 }
 
 fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {
@@ -217,22 +265,24 @@ fn newline() -> LineTerminator {
 
 enum HttpMethod {
     GET,
-    // PUT,
-    // POST,
-    // PATCH,
-    // OPTIONS,
-    // HEAD,
+    PUT,
+    POST,
+    PATCH,
+    OPTIONS,
+    HEAD,
+    DELETE,
 }
 
 impl HttpMethod {
     fn to_string(self) -> String {
         match self {
             HttpMethod::GET => "GET".to_string(),
-            // HttpMethod::PUT => "PUT".to_string(),
-            // HttpMethod::POST => "POST".to_string(),
-            // HttpMethod::PATCH => "PATCH".to_string(),
-            // HttpMethod::OPTIONS => "OPTIONS".to_string(),
-            // HttpMethod::HEAD => "HEAD".to_string(),
+            HttpMethod::PUT => "PUT".to_string(),
+            HttpMethod::POST => "POST".to_string(),
+            HttpMethod::PATCH => "PATCH".to_string(),
+            HttpMethod::OPTIONS => "OPTIONS".to_string(),
+            HttpMethod::HEAD => "HEAD".to_string(),
+            HttpMethod::DELETE => "DELETE".to_string(),
         }
     }
 }

@@ -69,11 +69,14 @@ mod tests {
                 "GET {{host}}/pets?limit=3  \n\nHTTP 200\n".to_string(),
             ),
             (
+                "_pets".to_string(),
+                "POST {{host}}/pets  \n\nHTTP 200\n".to_string(),
+            ),
+            (
                 "_pets_{petId}".to_string(),
                 "GET {{host}}/pets/string_value  \n\nHTTP 200\n".to_string(),
             ),
         ];
-
-        assert_eq!(result.unwrap(), expected);
+        assert_eq!(expected, result.unwrap());
     }
 }
