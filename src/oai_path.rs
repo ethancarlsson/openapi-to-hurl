@@ -3,12 +3,11 @@ use hurl_core::ast::{
     TemplateElement, Version, VersionValue, Whitespace,
 };
 use oas3::{
-    spec::{
-        Components, FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError,
-        SchemaType,
-    },
+    spec::{FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, SchemaType},
     Schema, Spec,
 };
+
+use crate::cli::Arguments;
 
 type OApiPath<'a> = (&'a String, &'a PathItem);
 
@@ -17,12 +16,12 @@ pub struct HurlFiles {
     pub errors: Vec<RefError>,
 }
 
-pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Components>) -> HurlFiles {
+pub fn to_hurl_files(path: OApiPath, spec: &Spec, args: &Arguments) -> HurlFiles {
     let mut hurl_files = vec![];
     let mut errors = vec![];
 
     match &path.1.get {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::GET) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::GET, args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
@@ -30,7 +29,7 @@ pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Component
     }
 
     match &path.1.post {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::POST) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::POST, args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
@@ -38,7 +37,7 @@ pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Component
     }
 
     match &path.1.put {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::PUT) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::PUT, args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
@@ -46,7 +45,7 @@ pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Component
     }
 
     match &path.1.patch {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::PATCH) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::PATCH, args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
@@ -54,16 +53,15 @@ pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Component
     }
 
     match &path.1.options {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::OPTIONS) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::OPTIONS, &args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
         None => (),
     }
 
-
     match &path.1.delete {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::DELETE) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::DELETE, &args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
@@ -71,13 +69,12 @@ pub fn to_hurl_files(path: OApiPath, spec: &Spec, _components: &Option<Component
     }
 
     match &path.1.head {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::HEAD) {
+        Some(o) => match to_file(path, &spec, &o, HttpMethod::HEAD, args) {
             Ok(file) => hurl_files.push(file),
             Err(e) => errors.extend(e),
         },
         None => (),
     }
-
 
     return HurlFiles { hurl_files, errors };
 }
@@ -87,6 +84,7 @@ fn to_file(
     spec: &Spec,
     operation: &Operation,
     method: HttpMethod,
+    args: &Arguments,
 ) -> Result<HurlFile, Vec<RefError>> {
     let param_result_iter = operation.parameters.iter().map(|p| match p {
         ObjectOrReference::Object(p) => Ok(p.clone()),
@@ -181,12 +179,12 @@ fn to_file(
             },
             line_terminator0: LineTerminator {
                 space0: Whitespace {
-                    value: " ".to_string(),
+                    value: "".to_string(),
                     source_info: empty_source_info(),
                 },
                 comment: None,
                 newline: Whitespace {
-                    value: " ".to_string(),
+                    value: "".to_string(),
                     source_info: empty_source_info(),
                 },
             },
@@ -195,36 +193,43 @@ fn to_file(
             body: None,
             source_info: empty_source_info(),
         },
-        response: Some(Response {
-            line_terminators: vec![newline(), newline()],
-            version: Version {
-                value: VersionValue::VersionAny,
-                source_info: empty_source_info(),
-            },
-            space0: Whitespace {
-                value: "".to_string(),
-                source_info: empty_source_info(),
-            },
-            status: Status {
-                value: hurl_core::ast::StatusValue::Specific(200),
-                source_info: empty_source_info(),
-            },
-            space1: Whitespace {
-                value: " ".to_string(),
-                source_info: empty_source_info(),
-            },
-            line_terminator0: newline(),
-            headers: vec![],
-            sections: vec![],
-            body: None,
-            source_info: empty_source_info(),
-        }),
+        response: match args.validate_response {
+            crate::cli::ResponseValidationChoice::No => None,
+            crate::cli::ResponseValidationChoice::Http200 => Some(status_code_200_response()),
+        },
     };
 
     Ok(HurlFile {
         entries: vec![entry],
         line_terminators: vec![],
     })
+}
+
+fn status_code_200_response() -> Response {
+    Response {
+        line_terminators: vec![newline(), newline()],
+        version: Version {
+            value: VersionValue::VersionAny,
+            source_info: empty_source_info(),
+        },
+        space0: Whitespace {
+            value: "".to_string(),
+            source_info: empty_source_info(),
+        },
+        status: Status {
+            value: hurl_core::ast::StatusValue::Specific(200),
+            source_info: empty_source_info(),
+        },
+        space1: Whitespace {
+            value: " ".to_string(),
+            source_info: empty_source_info(),
+        },
+        line_terminator0: newline(),
+        headers: vec![],
+        sections: vec![],
+        body: None,
+        source_info: empty_source_info(),
+    }
 }
 
 fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {
