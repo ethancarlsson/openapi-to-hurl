@@ -176,6 +176,7 @@ mod tests {
         )];
         assert_eq!(expected, result.unwrap());
     }
+
     #[test]
     fn hurl_files_from_spec_path_with_pet_store_spec_no_query_params() {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
@@ -252,6 +253,47 @@ mod tests {
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
                     file: "GET {{host}}/pets/string_value\n".to_string(),
+                    method: "GET".to_string(),
+                }],
+            ),
+        ];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_with_header_variables() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+        let result = hurl_files_from_spec_path(
+            &Arguments {
+                path: spec_path,
+                out: PathBuf::from_str("test").unwrap(),
+                validate_response: crate::cli::ResponseValidationChoice::No,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                custom_variables: CustomVariables { headers: vec![("Authorization".to_string(), "Bearer test".to_string()), ("test_key".to_string(), "test_val".to_string())] },
+                operation_id_selection: None,
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
+            (
+                "_pets".to_string(),
+                vec![
+                    HurlFileString {
+                        file: "GET {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
+                        method: "GET".to_string(),
+                    },
+                    HurlFileString {
+                        file: "POST {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
+                        method: "POST".to_string(),
+                    },
+                ],
+            ),
+            (
+                "_pets_{petId}".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets/string_value\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
                     method: "GET".to_string(),
                 }],
             ),

@@ -218,7 +218,7 @@ fn to_file(
                     space0: empty_space(),
                     space1: empty_space(),
                     space2: single_space(),
-                    line_terminator0: empty_line_terminator(),
+                    line_terminator0: newline(),
                 })
                 .collect(),
             sections: vec![],
@@ -280,20 +280,6 @@ fn single_space() -> Whitespace {
     Whitespace {
         value: " ".to_string(),
         source_info: empty_source_info(),
-    }
-}
-
-fn empty_line_terminator() -> LineTerminator {
-    LineTerminator {
-        space0: Whitespace {
-            value: "".to_string(),
-            source_info: empty_source_info(),
-        },
-        comment: None,
-        newline: Whitespace {
-            value: "".to_string(),
-            source_info: empty_source_info(),
-        },
     }
 }
 
