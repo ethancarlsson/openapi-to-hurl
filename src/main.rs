@@ -4,30 +4,46 @@ use crate::{cli::Cli, oai_path::to_hurl_files};
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::Arguments;
+use oas3::Spec;
+use variable_file::VariableFiles;
 
 mod cli;
 mod oai_path;
+mod variable_file;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let args = cli.args();
-    let hurl_files = hurl_files_from_spec_path(&args)?;
+
+    let spec =
+        oas3::from_path(args.path.clone()).with_context(|| format!("Issue with specification"))?;
+
+    let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
+
     for file_contents in hurl_files {
-        let file_path = format!("{}/{}.hurl", args.out.display(), file_contents.0);
+       let file_path = format!("{}/{}.hurl", args.out.display(), file_contents.0);
         let mut file = File::create(&file_path)
             .with_context(|| format!("Could not open new file at {file_path}"))?;
         file.write_all(file_contents.1.as_bytes())
             .with_context(|| format!("could not write to file at {file_path}"))?;
     }
 
+    for v_file in VariableFiles::from_spec(&spec).files {
+        let file_path = format!("{}/{}", args.out.display(), v_file.name);
+        let mut file = File::create(&file_path)
+            .with_context(|| format!("Could not open new file at {file_path}"))?;
+        file.write_all(v_file.get_contents().as_bytes())
+            .with_context(|| format!("could not write to file at {file_path}"))?;
+    }
+
     Ok(())
 }
 
-fn hurl_files_from_spec_path(args: &Arguments) -> Result<Vec<(String, String)>, anyhow::Error> {
-    let spec =
-        oas3::from_path(args.path.clone()).with_context(|| format!("Issue with specification"))?;
-
+fn hurl_files_from_spec_path(
+    args: &Arguments,
+    spec: &Spec,
+) -> Result<Vec<(String, String)>, anyhow::Error> {
     let mut files = vec![];
     for path in spec.paths.iter() {
         let hurl_files = to_hurl_files(path, &spec, &args);
@@ -63,11 +79,17 @@ mod tests {
 
     #[test]
     fn hurl_files_from_spec_path_with_pet_store_spec() {
-        let result = hurl_files_from_spec_path(&Arguments {
-            path: PathBuf::from_str("test_files/pet_store.json").unwrap(),
-            out: PathBuf::from_str("test").unwrap(),
-            validate_response: crate::cli::ResponseValidationChoice::Http200,
-        });
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Arguments {
+                path: spec_path,
+                out: PathBuf::from_str("test").unwrap(),
+                validate_response: crate::cli::ResponseValidationChoice::Http200,
+            },
+            &spec,
+        );
 
         let expected: Vec<(String, String)> = vec![
             (
@@ -88,11 +110,16 @@ mod tests {
 
     #[test]
     fn hurl_files_from_spec_no_response_validation() {
-        let result = hurl_files_from_spec_path(&Arguments {
-            path: PathBuf::from_str("test_files/pet_store.json").unwrap(),
-            out: PathBuf::from_str("test").unwrap(),
-            validate_response: crate::cli::ResponseValidationChoice::No,
-        });
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+        let result = hurl_files_from_spec_path(
+            &Arguments {
+                path: spec_path,
+                out: PathBuf::from_str("test").unwrap(),
+                validate_response: crate::cli::ResponseValidationChoice::No,
+            },
+            &spec,
+        );
 
         let expected: Vec<(String, String)> = vec![
             ("_pets".to_string(), "GET {{host}}/pets?limit=3".to_string()),
