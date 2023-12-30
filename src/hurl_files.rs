@@ -1,6 +1,6 @@
 use hurl_core::ast::{
-    Entry, HurlFile, LineTerminator, Method, Pos, Request, Response, SourceInfo, Status, Template,
-    TemplateElement, Version, VersionValue, Whitespace,
+    EncodedString, Entry, HurlFile, KeyValue, LineTerminator, Method, Pos, Request, Response,
+    SourceInfo, Status, Template, TemplateElement, Version, VersionValue, Whitespace,
 };
 use oas3::{
     spec::{FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, SchemaType},
@@ -179,18 +179,33 @@ fn to_file(
                 }],
                 source_info: empty_source_info(),
             },
-            line_terminator0: LineTerminator {
-                space0: Whitespace {
-                    value: "".to_string(),
-                    source_info: empty_source_info(),
-                },
-                comment: None,
-                newline: Whitespace {
-                    value: "".to_string(),
-                    source_info: empty_source_info(),
-                },
-            },
-            headers: vec![],
+            line_terminator0: newline(),
+            headers: args
+                .custom_variables
+                .headers
+                .iter()
+                .map(|kv| KeyValue {
+                    key: EncodedString {
+                        value: kv.0.clone(),
+                        encoded: kv.0.clone(),
+                        quotes: false,
+                        source_info: empty_source_info(),
+                    },
+                    value: Template {
+                        delimiter: None,
+                        elements: vec![TemplateElement::String {
+                            value: "".to_string(),
+                            encoded: format!("{{{{{}}}}}", kv.0.clone()),
+                        }],
+                        source_info: empty_source_info(),
+                    },
+                    line_terminators: vec![],
+                    space0: empty_space(),
+                    space1: empty_space(),
+                    space2: single_space(),
+                    line_terminator0: empty_line_terminator(),
+                })
+                .collect(),
             sections: vec![],
             body: None,
             source_info: empty_source_info(),
@@ -214,18 +229,12 @@ fn status_code_200_response() -> Response {
             value: VersionValue::VersionAny,
             source_info: empty_source_info(),
         },
-        space0: Whitespace {
-            value: "".to_string(),
-            source_info: empty_source_info(),
-        },
+        space0: empty_space(),
         status: Status {
             value: hurl_core::ast::StatusValue::Specific(200),
             source_info: empty_source_info(),
         },
-        space1: Whitespace {
-            value: " ".to_string(),
-            source_info: empty_source_info(),
-        },
+        space1: single_space(),
         line_terminator0: newline(),
         headers: vec![],
         sections: vec![],
@@ -242,6 +251,35 @@ fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {
         SchemaType::String => "string_value",
         SchemaType::Array => "[]array_value",
         SchemaType::Object => "{}",
+    }
+}
+
+fn empty_space() -> Whitespace {
+    Whitespace {
+        value: "".to_string(),
+        source_info: empty_source_info(),
+    }
+}
+
+fn single_space() -> Whitespace {
+    Whitespace {
+        value: " ".to_string(),
+        source_info: empty_source_info(),
+    }
+}
+
+
+fn empty_line_terminator() -> LineTerminator {
+    LineTerminator {
+        space0: Whitespace {
+            value: "".to_string(),
+            source_info: empty_source_info(),
+        },
+        comment: None,
+        newline: Whitespace {
+            value: "".to_string(),
+            source_info: empty_source_info(),
+        },
     }
 }
 

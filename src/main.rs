@@ -30,7 +30,7 @@ fn main() -> Result<()> {
             .with_context(|| format!("could not write to file at {file_path}"))?;
     }
 
-    for v_file in VariableFiles::from_spec(&spec).files {
+    for v_file in VariableFiles::from_spec(&spec, args.custom_variables).files {
         let file_path = format!("{}/{}", args.out.display(), v_file.name);
         let mut file = File::create(&file_path)
             .with_context(|| format!("Could not open new file at {file_path}"))?;
@@ -76,7 +76,7 @@ fn hurl_files_from_spec_path(
 mod tests {
     use std::{path::PathBuf, str::FromStr};
 
-    use crate::{cli::Arguments, hurl_files_from_spec_path};
+    use crate::{cli::Arguments, hurl_files_from_spec_path, variable_files::CustomVariables};
 
     #[test]
     fn hurl_files_from_spec_path_with_pet_store_spec() {
@@ -88,6 +88,7 @@ mod tests {
                 path: spec_path,
                 out: PathBuf::from_str("test").unwrap(),
                 validate_response: crate::cli::ResponseValidationChoice::Http200,
+                custom_variables: CustomVariables { headers: vec![] },
             },
             &spec,
         );
@@ -95,15 +96,15 @@ mod tests {
         let expected: Vec<(String, String)> = vec![
             (
                 "_pets".to_string(),
-                "GET {{host}}/pets?limit=3\n\nHTTP 200\n".to_string(),
+                "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
             ),
             (
                 "_pets".to_string(),
-                "POST {{host}}/pets\n\nHTTP 200\n".to_string(),
+                "POST {{host}}/pets\n\n\nHTTP 200\n".to_string(),
             ),
             (
                 "_pets_{petId}".to_string(),
-                "GET {{host}}/pets/string_value\n\nHTTP 200\n".to_string(),
+                "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
             ),
         ];
         assert_eq!(expected, result.unwrap());
@@ -118,16 +119,17 @@ mod tests {
                 path: spec_path,
                 out: PathBuf::from_str("test").unwrap(),
                 validate_response: crate::cli::ResponseValidationChoice::No,
+                custom_variables: CustomVariables { headers: vec![] },
             },
             &spec,
         );
 
         let expected: Vec<(String, String)> = vec![
-            ("_pets".to_string(), "GET {{host}}/pets?limit=3".to_string()),
-            ("_pets".to_string(), "POST {{host}}/pets".to_string()),
+            ("_pets".to_string(), "GET {{host}}/pets?limit=3\n".to_string()),
+            ("_pets".to_string(), "POST {{host}}/pets\n".to_string()),
             (
                 "_pets_{petId}".to_string(),
-                "GET {{host}}/pets/string_value".to_string(),
+                "GET {{host}}/pets/string_value\n".to_string(),
             ),
         ];
         assert_eq!(expected, result.unwrap());
