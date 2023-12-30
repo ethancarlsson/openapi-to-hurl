@@ -17,14 +17,13 @@ mod variable_files;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-
     let args = cli.args();
-
     let spec =
         oas3::from_path(args.path.clone()).with_context(|| format!("Issue with specification"))?;
 
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
 
+    let mut files_created_count = 0;
     for file_contents in hurl_files {
         let dir_path = format!("{}/{}", args.out.display(), file_contents.0.clone());
         fs::create_dir_all(&dir_path)
@@ -42,6 +41,7 @@ fn main() -> Result<()> {
 
             file.write_all(file_string.file.as_bytes())
                 .with_context(|| format!("could not write to file at {file_path}"))?;
+            files_created_count += 1
         }
     }
 
@@ -52,6 +52,8 @@ fn main() -> Result<()> {
         file.write_all(v_file.get_contents().as_bytes())
             .with_context(|| format!("could not write to file at {file_path}"))?;
     }
+
+    println!("Created or updated {files_created_count} hurl files");
 
     Ok(())
 }
@@ -270,7 +272,12 @@ mod tests {
                 out: PathBuf::from_str("test").unwrap(),
                 validate_response: crate::cli::ResponseValidationChoice::No,
                 query_params_choice: crate::cli::QueryParamChoice::None,
-                custom_variables: CustomVariables { headers: vec![("Authorization".to_string(), "Bearer test".to_string()), ("test_key".to_string(), "test_val".to_string())] },
+                custom_variables: CustomVariables {
+                    headers: vec![
+                        ("Authorization".to_string(), "Bearer test".to_string()),
+                        ("test_key".to_string(), "test_val".to_string()),
+                    ],
+                },
                 operation_id_selection: None,
             },
             &spec,
