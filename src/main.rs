@@ -26,11 +26,9 @@ fn main() -> Result<()> {
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
 
     for file_contents in hurl_files {
-        fs::create_dir(format!(
-            "{}/{}",
-            args.out.display(),
-            file_contents.0.clone()
-        ))?;
+        let dir_path = format!("{}/{}", args.out.display(), file_contents.0.clone());
+        fs::create_dir_all(&dir_path)
+            .with_context(|| format!("couldn't create directory: {dir_path}"))?;
 
         for file_string in file_contents.1 {
             let file_path = format!(
