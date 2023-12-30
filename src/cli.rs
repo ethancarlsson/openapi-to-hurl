@@ -12,6 +12,14 @@ pub enum ResponseValidationChoice {
     Http200,
 }
 
+#[derive(ValueEnum, Clone)]
+pub enum QueryParamChoice {
+    /// No query params
+    None,
+    /// Default values based on types
+    Defaults,
+}
+
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 pub struct Cli {
@@ -26,6 +34,9 @@ pub struct Cli {
     /// and to the variables file as `HEADER_KEY=HEADER_VALUE`
     #[arg(long, value_parser = parse_key_val::<String, String>)]
     header_vars: Vec<(String, String)>,
+    /// Lets you choose whether, and how to, pass query params
+    #[arg(short = 'q', long, default_value_t = QueryParamChoice::None, value_enum)]
+    query_params: QueryParamChoice,
 }
 
 /// Parse a single key-value pair
@@ -46,6 +57,7 @@ pub struct Arguments {
     pub path: std::path::PathBuf,
     pub out: std::path::PathBuf,
     pub validate_response: ResponseValidationChoice,
+    pub query_params_choice: QueryParamChoice,
     pub custom_variables: CustomVariables,
 }
 
@@ -55,6 +67,7 @@ impl Cli {
             path: self.path,
             out: self.out,
             validate_response: self.validate_response,
+            query_params_choice: self.query_params,
             custom_variables: CustomVariables {
                 headers: self.header_vars,
             },

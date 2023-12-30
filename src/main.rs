@@ -118,6 +118,7 @@ mod tests {
                 path: spec_path,
                 out: PathBuf::from_str("test").unwrap(),
                 validate_response: crate::cli::ResponseValidationChoice::Http200,
+                query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 custom_variables: CustomVariables { headers: vec![] },
             },
             &spec,
@@ -149,6 +150,47 @@ mod tests {
     }
 
     #[test]
+    fn hurl_files_from_spec_path_with_pet_store_spec_no_query_params() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Arguments {
+                path: spec_path,
+                out: PathBuf::from_str("test").unwrap(),
+                validate_response: crate::cli::ResponseValidationChoice::Http200,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                custom_variables: CustomVariables { headers: vec![] },
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
+            (
+                "_pets".to_string(),
+                vec![
+                    HurlFileString {
+                        file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                        method: "GET".to_string(),
+                    },
+                    HurlFileString {
+                        file: "POST {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                        method: "POST".to_string(),
+                    },
+                ],
+            ),
+            (
+                "_pets_{petId}".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    method: "GET".to_string(),
+                }],
+            ),
+        ];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
     fn hurl_files_from_spec_no_response_validation() {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
         let spec = oas3::from_path(spec_path.clone()).unwrap();
@@ -157,6 +199,7 @@ mod tests {
                 path: spec_path,
                 out: PathBuf::from_str("test").unwrap(),
                 validate_response: crate::cli::ResponseValidationChoice::No,
+                query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 custom_variables: CustomVariables { headers: vec![] },
             },
             &spec,

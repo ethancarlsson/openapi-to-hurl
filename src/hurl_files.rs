@@ -139,7 +139,7 @@ fn to_file(
     let path_params = param_iter.clone().filter(|p| p.location == "path");
     let mut query_params = param_iter.filter(|p| p.location == "query");
 
-    let uri = path_params.fold(path.0.clone(), |uri, param| {
+    let mut uri = path_params.fold(path.0.clone(), |uri, param| {
         let schema = &param.schema.unwrap_or(Schema::default());
         uri.replace(
             &("{".to_string() + &param.name + "}"),
@@ -147,43 +147,49 @@ fn to_file(
         )
     });
 
-    let uri_with_first_query_param = format!(
-        "{uri}{}",
-        match query_params.next() {
-            Some(param) => {
-                let schema = param.schema.unwrap_or(Schema {
-                    example: None,
-                    ..Schema::default()
-                });
-                format!(
-                    "?{}={}",
-                    param.name,
-                    match schema.example {
-                        Some(e) => e.to_string().replace("\"", ""),
-                        None => path_param_from_schema_type(
-                            schema.schema_type.unwrap_or(SchemaType::String)
+    match args.query_params_choice {
+        crate::cli::QueryParamChoice::None => (),
+        crate::cli::QueryParamChoice::Defaults => {
+            let uri_with_first_query_param = format!(
+                "{uri}{}",
+                match query_params.next() {
+                    Some(param) => {
+                        let schema = param.schema.unwrap_or(Schema {
+                            example: None,
+                            ..Schema::default()
+                        });
+                        format!(
+                            "?{}={}",
+                            param.name,
+                            match schema.example {
+                                Some(e) => e.to_string().replace("\"", ""),
+                                None => path_param_from_schema_type(
+                                    schema.schema_type.unwrap_or(SchemaType::String)
+                                )
+                                .to_string(),
+                            }
                         )
-                        .to_string(),
                     }
-                )
-            }
-            None => "".to_string(),
-        }
-    );
+                    None => "".to_string(),
+                }
+            );
 
-    let uri_with_query_params = query_params.fold(uri_with_first_query_param, |uri, param| {
-        format!(
-            "{uri}&{}={}",
-            param.name,
-            path_param_from_schema_type(
-                param
-                    .schema
-                    .unwrap_or(Schema::default())
-                    .schema_type
-                    .unwrap_or(SchemaType::String)
-            )
-        )
-    });
+            uri =
+                query_params.fold(uri_with_first_query_param, |uri, param| {
+                    format!(
+                        "{uri}&{}={}",
+                        param.name,
+                        path_param_from_schema_type(
+                            param
+                                .schema
+                                .unwrap_or(Schema::default())
+                                .schema_type
+                                .unwrap_or(SchemaType::String)
+                        )
+                    )
+                });
+        }
+    };
 
     let entry = Entry {
         request: Request {
@@ -201,7 +207,7 @@ fn to_file(
                 delimiter: None,
                 elements: vec![TemplateElement::String {
                     value: "".to_string(),
-                    encoded: format!("{{{{host}}}}{uri_with_query_params}"),
+                    encoded: format!("{{{{host}}}}{uri}"),
                 }],
                 source_info: empty_source_info(),
             },
