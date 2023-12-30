@@ -37,6 +37,10 @@ pub struct Cli {
     /// Lets you choose whether, and how to, pass query params
     #[arg(short = 'q', long, default_value_t = QueryParamChoice::None, value_enum)]
     query_params: QueryParamChoice,
+    /// Select an operationId from Open API Spec. Can use a comma seperated list
+    /// to select more than one e.g. listOrders,retrieveOrder
+    #[arg(short = 'i', long)]
+    select_operation_id: Option<String>,
 }
 
 /// Parse a single key-value pair
@@ -59,6 +63,7 @@ pub struct Arguments {
     pub validate_response: ResponseValidationChoice,
     pub query_params_choice: QueryParamChoice,
     pub custom_variables: CustomVariables,
+    pub operation_id_selection: Option<Vec<String>>,
 }
 
 impl Cli {
@@ -70,6 +75,10 @@ impl Cli {
             query_params_choice: self.query_params,
             custom_variables: CustomVariables {
                 headers: self.header_vars,
+            },
+            operation_id_selection: match self.select_operation_id {
+                Some(s) => Some(s.split(",").map(|s| s.to_string()).collect::<Vec<String>>()),
+                None => None,
             },
         }
     }
