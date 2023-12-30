@@ -1,15 +1,16 @@
+use crate::variable_files::VariableFiles;
 use std::{fs::File, io::Write};
 
-use crate::{cli::Cli, oai_path::to_hurl_files};
+use crate::cli::Cli;
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::Arguments;
+use hurl_files::HurlFiles;
 use oas3::Spec;
-use variable_file::VariableFiles;
 
 mod cli;
-mod oai_path;
-mod variable_file;
+mod hurl_files;
+mod variable_files;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -22,7 +23,7 @@ fn main() -> Result<()> {
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
 
     for file_contents in hurl_files {
-       let file_path = format!("{}/{}.hurl", args.out.display(), file_contents.0);
+        let file_path = format!("{}/{}.hurl", args.out.display(), file_contents.0);
         let mut file = File::create(&file_path)
             .with_context(|| format!("Could not open new file at {file_path}"))?;
         file.write_all(file_contents.1.as_bytes())
@@ -46,7 +47,7 @@ fn hurl_files_from_spec_path(
 ) -> Result<Vec<(String, String)>, anyhow::Error> {
     let mut files = vec![];
     for path in spec.paths.iter() {
-        let hurl_files = to_hurl_files(path, &spec, &args);
+        let hurl_files = HurlFiles::from_oai_path(path, &spec, &args);
 
         if hurl_files.errors.len() > 0 {
             bail!(

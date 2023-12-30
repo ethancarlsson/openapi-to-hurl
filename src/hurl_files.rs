@@ -16,67 +16,69 @@ pub struct HurlFiles {
     pub errors: Vec<RefError>,
 }
 
-pub fn to_hurl_files(path: OApiPath, spec: &Spec, args: &Arguments) -> HurlFiles {
-    let mut hurl_files = vec![];
-    let mut errors = vec![];
+impl HurlFiles {
+    pub fn from_oai_path(path: OApiPath, spec: &Spec, args: &Arguments) -> HurlFiles {
+        let mut hurl_files = vec![];
+        let mut errors = vec![];
 
-    match &path.1.get {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::GET, args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
+        match &path.1.get {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::GET, args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        match &path.1.post {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::POST, args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        match &path.1.put {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::PUT, args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        match &path.1.patch {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::PATCH, args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        match &path.1.options {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::OPTIONS, &args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        match &path.1.delete {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::DELETE, &args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        match &path.1.head {
+            Some(o) => match to_file(path, &spec, &o, HttpMethod::HEAD, args) {
+                Ok(file) => hurl_files.push(file),
+                Err(e) => errors.extend(e),
+            },
+            None => (),
+        }
+
+        return HurlFiles { hurl_files, errors };
     }
-
-    match &path.1.post {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::POST, args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
-    }
-
-    match &path.1.put {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::PUT, args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
-    }
-
-    match &path.1.patch {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::PATCH, args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
-    }
-
-    match &path.1.options {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::OPTIONS, &args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
-    }
-
-    match &path.1.delete {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::DELETE, &args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
-    }
-
-    match &path.1.head {
-        Some(o) => match to_file(path, &spec, &o, HttpMethod::HEAD, args) {
-            Ok(file) => hurl_files.push(file),
-            Err(e) => errors.extend(e),
-        },
-        None => (),
-    }
-
-    return HurlFiles { hurl_files, errors };
 }
 
 fn to_file(
