@@ -1,5 +1,8 @@
 use crate::variable_files::VariableFiles;
-use std::{fs::File, io::Write};
+use std::{
+    fs::{self, File},
+    io::Write,
+};
 
 use crate::cli::Cli;
 use anyhow::{bail, Context, Result};
@@ -23,11 +26,25 @@ fn main() -> Result<()> {
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
 
     for file_contents in hurl_files {
-        let file_path = format!("{}/{}.hurl", args.out.display(), file_contents.0);
-        let mut file = File::create(&file_path)
-            .with_context(|| format!("Could not open new file at {file_path}"))?;
-        file.write_all(file_contents.1.as_bytes())
-            .with_context(|| format!("could not write to file at {file_path}"))?;
+        fs::create_dir(format!(
+            "{}/{}",
+            args.out.display(),
+            file_contents.0.clone()
+        ))?;
+
+        for file_string in file_contents.1 {
+            let file_path = format!(
+                "{}/{}/{}.hurl",
+                args.out.display(),
+                file_contents.0,
+                file_string.method
+            );
+            let mut file = File::create(&file_path)
+                .with_context(|| format!("Could not open new file at {file_path}"))?;
+
+            file.write_all(file_string.file.as_bytes())
+                .with_context(|| format!("could not write to file at {file_path}"))?;
+        }
     }
 
     for v_file in VariableFiles::from_spec(&spec, args.custom_variables).files {
@@ -41,10 +58,16 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, PartialEq)]
+pub struct HurlFileString {
+    pub method: String,
+    pub file: String,
+}
+
 fn hurl_files_from_spec_path(
     args: &Arguments,
     spec: &Spec,
-) -> Result<Vec<(String, String)>, anyhow::Error> {
+) -> Result<Vec<(String, Vec<HurlFileString>)>, anyhow::Error> {
     let mut files = vec![];
     for path in spec.paths.iter() {
         let hurl_files = HurlFiles::from_oai_path(path, &spec, &args);
@@ -61,12 +84,17 @@ fn hurl_files_from_spec_path(
             )
         }
 
-        for file in hurl_files.hurl_files {
-            files.push((
-                path.0.replace("/", "_"),
-                (hurlfmt::format::format_text(file, false)),
-            ));
-        }
+        files.push((
+            path.0.replace("/", "_"),
+            hurl_files
+                .hurl_files
+                .iter()
+                .map(|f| HurlFileString {
+                    method: f.method.clone(),
+                    file: hurlfmt::format::format_text(f.file.clone(), false),
+                })
+                .collect(),
+        ))
     }
 
     Ok(files)
@@ -76,7 +104,9 @@ fn hurl_files_from_spec_path(
 mod tests {
     use std::{path::PathBuf, str::FromStr};
 
-    use crate::{cli::Arguments, hurl_files_from_spec_path, variable_files::CustomVariables};
+    use crate::{
+        cli::Arguments, hurl_files_from_spec_path, variable_files::CustomVariables, HurlFileString,
+    };
 
     #[test]
     fn hurl_files_from_spec_path_with_pet_store_spec() {
@@ -93,18 +123,26 @@ mod tests {
             &spec,
         );
 
-        let expected: Vec<(String, String)> = vec![
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
             (
                 "_pets".to_string(),
-                "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
-            ),
-            (
-                "_pets".to_string(),
-                "POST {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                vec![
+                    HurlFileString {
+                        file: "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
+                        method: "GET".to_string(),
+                    },
+                    HurlFileString {
+                        file: "POST {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                        method: "POST".to_string(),
+                    },
+                ],
             ),
             (
                 "_pets_{petId}".to_string(),
-                "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    method: "GET".to_string(),
+                }],
             ),
         ];
         assert_eq!(expected, result.unwrap());
@@ -124,12 +162,26 @@ mod tests {
             &spec,
         );
 
-        let expected: Vec<(String, String)> = vec![
-            ("_pets".to_string(), "GET {{host}}/pets?limit=3\n".to_string()),
-            ("_pets".to_string(), "POST {{host}}/pets\n".to_string()),
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
+            (
+                "_pets".to_string(),
+                vec![
+                    HurlFileString {
+                        file: "GET {{host}}/pets?limit=3\n".to_string(),
+                        method: "GET".to_string(),
+                    },
+                    HurlFileString {
+                        file: "POST {{host}}/pets\n".to_string(),
+                        method: "POST".to_string(),
+                    },
+                ],
+            ),
             (
                 "_pets_{petId}".to_string(),
-                "GET {{host}}/pets/string_value\n".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets/string_value\n".to_string(),
+                    method: "GET".to_string(),
+                }],
             ),
         ];
         assert_eq!(expected, result.unwrap());

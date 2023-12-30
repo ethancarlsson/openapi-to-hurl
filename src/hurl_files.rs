@@ -12,8 +12,13 @@ use crate::cli::Arguments;
 type OApiPath<'a> = (&'a String, &'a PathItem);
 
 pub struct HurlFiles {
-    pub hurl_files: Vec<HurlFile>,
+    pub hurl_files: Vec<LocalHurlFile>,
     pub errors: Vec<RefError>,
+}
+
+pub struct LocalHurlFile {
+    pub method: String,
+    pub file: HurlFile,
 }
 
 impl HurlFiles {
@@ -23,7 +28,10 @@ impl HurlFiles {
 
         match &path.1.get {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::GET, args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::GET.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -31,7 +39,10 @@ impl HurlFiles {
 
         match &path.1.post {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::POST, args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::POST.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -39,7 +50,10 @@ impl HurlFiles {
 
         match &path.1.put {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::PUT, args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::PUT.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -47,7 +61,10 @@ impl HurlFiles {
 
         match &path.1.patch {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::PATCH, args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::PATCH.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -55,7 +72,10 @@ impl HurlFiles {
 
         match &path.1.options {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::OPTIONS, &args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::OPTIONS.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -63,7 +83,10 @@ impl HurlFiles {
 
         match &path.1.delete {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::DELETE, &args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::DELETE.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -71,7 +94,10 @@ impl HurlFiles {
 
         match &path.1.head {
             Some(o) => match to_file(path, &spec, &o, HttpMethod::HEAD, args) {
-                Ok(file) => hurl_files.push(file),
+                Ok(file) => hurl_files.push(LocalHurlFile {
+                    file,
+                    method: HttpMethod::HEAD.to_string(),
+                }),
                 Err(e) => errors.extend(e),
             },
             None => (),
@@ -267,7 +293,6 @@ fn single_space() -> Whitespace {
         source_info: empty_source_info(),
     }
 }
-
 
 fn empty_line_terminator() -> LineTerminator {
     LineTerminator {
