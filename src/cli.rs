@@ -48,10 +48,9 @@ pub struct Cli {
     /// Lets you choose whether, and how to, pass query params
     #[arg(short = 'q', long, default_value_t = QueryParamChoice::default(), value_enum)]
     query_params: QueryParamChoice,
-    /// Select an operationId from Open API Spec. Can use a comma seperated list
-    /// to select more than one e.g. listOrders,retrieveOrder
+    /// Select an operationId from Open API Spec, can select multiple operationIds
     #[arg(short = 'i', long)]
-    select_operation_id: Option<String>,
+    select_operation_id: Option<Vec<String>>,
     /// How the variables file should be updated
     #[arg(long, default_value_t = VariablesUpdateStrategy::default(), value_enum)]
     variables_update_strategy: VariablesUpdateStrategy,
@@ -93,10 +92,7 @@ impl Cli {
             custom_variables: CustomVariables {
                 headers: self.header_vars,
             },
-            operation_id_selection: match self.select_operation_id {
-                Some(s) => Some(s.split(",").map(|s| s.to_string()).collect::<Vec<String>>()),
-                None => None,
-            },
+            operation_id_selection: self.select_operation_id
         }
     }
 }
