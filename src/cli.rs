@@ -20,6 +20,14 @@ pub enum QueryParamChoice {
     Defaults,
 }
 
+#[derive(ValueEnum, Clone)]
+pub enum VariablesUpdateStrategy {
+    /// Overwrites the entire variables file with new variables
+    Overwrite,
+    /// Merges new variables with old variables
+    Merge,
+}
+
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 pub struct Cli {
@@ -41,6 +49,9 @@ pub struct Cli {
     /// to select more than one e.g. listOrders,retrieveOrder
     #[arg(short = 'i', long)]
     select_operation_id: Option<String>,
+    /// How the variables file should be updated
+    #[arg(long, default_value_t = VariablesUpdateStrategy::Merge, value_enum)]
+    variables_update_strategy: VariablesUpdateStrategy,
 }
 
 /// Parse a single key-value pair
@@ -63,6 +74,7 @@ pub struct Arguments {
     pub validate_response: ResponseValidationChoice,
     pub query_params_choice: QueryParamChoice,
     pub custom_variables: CustomVariables,
+    pub variables_update_strategy: VariablesUpdateStrategy,
     pub operation_id_selection: Option<Vec<String>>,
 }
 
@@ -73,6 +85,7 @@ impl Cli {
             out: self.out,
             validate_response: self.validate_response,
             query_params_choice: self.query_params,
+            variables_update_strategy: self.variables_update_strategy,
             custom_variables: CustomVariables {
                 headers: self.header_vars,
             },

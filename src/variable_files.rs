@@ -14,6 +14,60 @@ impl VariableFile {
             .collect::<Vec<String>>()
             .join("\n")
     }
+
+    pub fn from_string(name: String, str_file: String) -> Self {
+        VariableFile {
+            name,
+            key_vals: str_file
+                .split("\n")
+                .map(|s| {
+                    let mut kv = s.split("=");
+                    (
+                        kv.next().unwrap_or("").to_string(),
+                        kv.next().unwrap_or("").to_string(),
+                    )
+                })
+                .collect::<Vec<(String, String)>>(),
+        }
+    }
+
+    pub fn empty(name: String) -> Self {
+        VariableFile {
+            name,
+            key_vals: vec![],
+        }
+    }
+
+    pub fn merge(self, other: VariableFile) -> Self {
+        if self.name != other.name {
+            return self;
+        }
+
+        let other_keys = other
+            .key_vals
+            .iter()
+            .map(|kv| kv.0.clone())
+            .collect::<Vec<String>>();
+
+        // Filter out all keys in the new file
+        let mut new_kvs = self.key_vals.iter()
+        .filter_map(|kv| {
+            if !other_keys.contains(&kv.0)  {
+                Some(kv.clone())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<(String, String)>>();
+
+        // Extend the file with all the new values
+        new_kvs.extend(other.key_vals.iter().map(|kv| kv.clone()));
+
+        Self {
+            name: self.name,
+            key_vals: new_kvs,
+        }
+    }
 }
 
 pub struct CustomVariables {
@@ -79,10 +133,7 @@ mod tests {
                         "host".to_string(),
                         "http://petstore.swagger.io/v1".to_string(),
                     ),
-                    (
-                        "Authorization".to_string(),
-                        "Bearer test".to_string(),
-                    ),
+                    ("Authorization".to_string(), "Bearer test".to_string()),
                 ],
             }],
         };
@@ -95,6 +146,65 @@ mod tests {
                     headers: vec![("Authorization".to_string(), "Bearer test".to_string())]
                 }
             )
+        );
+    }
+
+    #[test]
+    fn variables_file_merge_with_differently_named_files_doesnt_merge() {
+        let file1 = VariableFile::from_string("test1".to_string(), "hello=world1".to_string());
+        let file2 = VariableFile::from_string("test2".to_string(), "hello=world2".to_string());
+
+        assert_eq!(
+            "hello=world1".to_string(),
+            file1.merge(file2).get_contents()
+        );
+    }
+
+    #[test]
+    fn variables_file_merge_with_same_key_overrides_old_key_value() {
+        let file1 =
+            VariableFile::from_string("test".to_string(), "hello=world1\ntest1=test1".to_string());
+        let file2 = VariableFile::from_string("test".to_string(), "hello=world2".to_string());
+
+        assert_eq!(
+            "test1=test1\nhello=world2".to_string(),
+            file1.merge(file2).get_contents()
+        );
+    }
+
+    #[test]
+    fn variables_file_merge_with_new_key_appends_key() {
+        let file1 =
+            VariableFile::from_string("test".to_string(), "hello=world1\ntest1=test1".to_string());
+        let file2 = VariableFile::from_string("test".to_string(), "hey=world2".to_string());
+
+        assert_eq!(
+            "hello=world1\ntest1=test1\nhey=world2".to_string(),
+            file1.merge(file2).get_contents()
+        );
+    }
+
+    #[test]
+    fn variables_file_merge_with_no_new() {
+        let file1 =
+            VariableFile::from_string("test".to_string(), "hello=world1\ntest1=test1".to_string());
+        let file2 = VariableFile::empty("test".to_string());
+
+        assert_eq!(
+            "hello=world1\ntest1=test1".to_string(),
+            file1.merge(file2).get_contents()
+        );
+    }
+
+    #[test]
+    fn variables_file_merge_with_no_old() {
+        let file1 = VariableFile::empty("test".to_string());
+        let file2 =
+            VariableFile::from_string("test".to_string(), "hello=world1\ntest1=test1".to_string());
+
+        assert_eq!(
+            "hello=world1\ntest1=test1".to_string(),
+            file1.merge(file2).get_contents()
         );
     }
 }

@@ -1,4 +1,4 @@
-use crate::variable_files::VariableFiles;
+use crate::variable_files::{VariableFile, VariableFiles};
 use std::{
     fs::{self, File},
     io::Write,
@@ -47,9 +47,15 @@ fn main() -> Result<()> {
 
     for v_file in VariableFiles::from_spec(&spec, args.custom_variables).files {
         let file_path = format!("{}/{}", args.out.display(), v_file.name);
+        let existing_variable_file = match fs::read_to_string(&file_path) {
+            Ok(f) => VariableFile::from_string(v_file.name.clone(), f),
+            Err(_) => VariableFile::empty(v_file.name.clone()),
+        };
+
         let mut file = File::create(&file_path)
-            .with_context(|| format!("Could not open new file at {file_path}"))?;
-        file.write_all(v_file.get_contents().as_bytes())
+            .with_context(|| format!("could not open file at {}", v_file.name))?;
+
+        file.write_all(v_file.merge(existing_variable_file).get_contents().as_bytes())
             .with_context(|| format!("could not write to file at {file_path}"))?;
     }
 
@@ -123,6 +129,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 custom_variables: CustomVariables { headers: vec![] },
                 operation_id_selection: None,
+                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
             },
             &spec,
         );
@@ -165,6 +172,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 custom_variables: CustomVariables { headers: vec![] },
                 operation_id_selection: Some(vec!["listPets".to_string()]),
+                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
             },
             &spec,
         );
@@ -192,6 +200,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 custom_variables: CustomVariables { headers: vec![] },
                 operation_id_selection: None,
+                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
             },
             &spec,
         );
@@ -233,6 +242,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 custom_variables: CustomVariables { headers: vec![] },
                 operation_id_selection: None,
+                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
             },
             &spec,
         );
@@ -279,6 +289,7 @@ mod tests {
                     ],
                 },
                 operation_id_selection: None,
+                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
             },
             &spec,
         );
