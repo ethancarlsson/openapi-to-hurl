@@ -70,6 +70,7 @@ impl VariableFile {
     }
 }
 
+#[derive(Default)]
 pub struct CustomVariables {
     pub headers: Vec<(String, String)>,
 }

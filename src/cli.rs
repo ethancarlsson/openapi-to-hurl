@@ -4,26 +4,29 @@ use clap::{Parser, ValueEnum};
 
 use crate::variable_files::CustomVariables;
 
-#[derive(ValueEnum, Clone)]
+#[derive(ValueEnum, Clone, Default)]
 pub enum ResponseValidationChoice {
     /// No Validation
     No,
+    #[default]
     /// HTTP Status Code
     Http200,
 }
 
-#[derive(ValueEnum, Clone)]
+#[derive(ValueEnum, Clone, Default)]
 pub enum QueryParamChoice {
     /// No query params
     None,
+    #[default]
     /// Default values based on types
     Defaults,
 }
 
-#[derive(ValueEnum, Clone)]
+#[derive(ValueEnum, Clone, Default)]
 pub enum VariablesUpdateStrategy {
     /// Overwrites the entire variables file with new variables
     Overwrite,
+    #[default]
     /// Merges new variables with old variables
     Merge,
 }
@@ -36,21 +39,21 @@ pub struct Cli {
     /// Directory where the hurl files will be created
     out: std::path::PathBuf,
     /// Response validation
-    #[arg(short = 'r', long, default_value_t = ResponseValidationChoice::Http200, value_enum)]
+    #[arg(short = 'r', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
     validate_response: ResponseValidationChoice,
     /// Input: `HEADER_KEY=HEADER_VALUE`. Custom headers will be added to each request as `HEADER_KEY: {{HEADER_KEY}}`
     /// and to the variables file as `HEADER_KEY=HEADER_VALUE`
     #[arg(long, value_parser = parse_key_val::<String, String>)]
     header_vars: Vec<(String, String)>,
     /// Lets you choose whether, and how to, pass query params
-    #[arg(short = 'q', long, default_value_t = QueryParamChoice::None, value_enum)]
+    #[arg(short = 'q', long, default_value_t = QueryParamChoice::default(), value_enum)]
     query_params: QueryParamChoice,
     /// Select an operationId from Open API Spec. Can use a comma seperated list
     /// to select more than one e.g. listOrders,retrieveOrder
     #[arg(short = 'i', long)]
     select_operation_id: Option<String>,
     /// How the variables file should be updated
-    #[arg(long, default_value_t = VariablesUpdateStrategy::Merge, value_enum)]
+    #[arg(long, default_value_t = VariablesUpdateStrategy::default(), value_enum)]
     variables_update_strategy: VariablesUpdateStrategy,
 }
 
@@ -68,6 +71,7 @@ where
     Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
 }
 
+#[derive(Default)]
 pub struct Arguments {
     pub path: std::path::PathBuf,
     pub out: std::path::PathBuf,

@@ -113,7 +113,7 @@ mod tests {
     use std::{path::PathBuf, str::FromStr};
 
     use crate::{
-        cli::Arguments, hurl_files_from_spec_path, variable_files::CustomVariables, HurlFileString,
+        cli::{Arguments, QueryParamChoice, ResponseValidationChoice}, hurl_files_from_spec_path, variable_files::CustomVariables, HurlFileString,
     };
 
     #[test]
@@ -125,11 +125,7 @@ mod tests {
             &Arguments {
                 path: spec_path,
                 out: PathBuf::from_str("test").unwrap(),
-                validate_response: crate::cli::ResponseValidationChoice::Http200,
-                query_params_choice: crate::cli::QueryParamChoice::Defaults,
-                custom_variables: CustomVariables { headers: vec![] },
-                operation_id_selection: None,
-                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
+                ..Arguments::default()
             },
             &spec,
         );
@@ -167,12 +163,8 @@ mod tests {
         let result = hurl_files_from_spec_path(
             &Arguments {
                 path: spec_path,
-                out: PathBuf::from_str("test").unwrap(),
-                validate_response: crate::cli::ResponseValidationChoice::Http200,
-                query_params_choice: crate::cli::QueryParamChoice::Defaults,
-                custom_variables: CustomVariables { headers: vec![] },
                 operation_id_selection: Some(vec!["listPets".to_string()]),
-                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
+                ..Arguments::default()
             },
             &spec,
         );
@@ -195,12 +187,8 @@ mod tests {
         let result = hurl_files_from_spec_path(
             &Arguments {
                 path: spec_path,
-                out: PathBuf::from_str("test").unwrap(),
-                validate_response: crate::cli::ResponseValidationChoice::Http200,
                 query_params_choice: crate::cli::QueryParamChoice::None,
-                custom_variables: CustomVariables { headers: vec![] },
-                operation_id_selection: None,
-                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
+                ..Arguments::default()
             },
             &spec,
         );
@@ -237,12 +225,9 @@ mod tests {
         let result = hurl_files_from_spec_path(
             &Arguments {
                 path: spec_path,
-                out: PathBuf::from_str("test").unwrap(),
                 validate_response: crate::cli::ResponseValidationChoice::No,
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
-                custom_variables: CustomVariables { headers: vec![] },
-                operation_id_selection: None,
-                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
+                ..Arguments::default()
             },
             &spec,
         );
@@ -279,17 +264,15 @@ mod tests {
         let result = hurl_files_from_spec_path(
             &Arguments {
                 path: spec_path,
-                out: PathBuf::from_str("test").unwrap(),
-                validate_response: crate::cli::ResponseValidationChoice::No,
-                query_params_choice: crate::cli::QueryParamChoice::None,
                 custom_variables: CustomVariables {
                     headers: vec![
                         ("Authorization".to_string(), "Bearer test".to_string()),
                         ("test_key".to_string(), "test_val".to_string()),
                     ],
                 },
-                operation_id_selection: None,
-                variables_update_strategy: crate::cli::VariablesUpdateStrategy::Merge,
+                query_params_choice: QueryParamChoice::None,
+                validate_response: ResponseValidationChoice::No,
+                ..Arguments::default()
             },
             &spec,
         );
