@@ -164,39 +164,17 @@ fn parse_json_from_schema(
                 }
             }
         }
-        // TODO: figure out how we can figure out the type when no type is given
         None => {
             if schema.all_of.len() > 0 {
-                trace!(
-                    "Creating JSON object from all_of schema for {}",
-                    schema
-                        .title
-                        .clone()
-                        .unwrap_or("Untitled Schema".to_string())
-                );
                 return Ok(Some(json_obj_from_allof(schema.all_of, spec, depth)?));
             }
 
             if schema.one_of.len() > 0 {
-                trace!(
-                    "Creating JSON object from one_of schema for {}",
-                    schema
-                        .title
-                        .clone()
-                        .unwrap_or("Untitled Schema".to_string())
-                );
                 return Ok(json_obj_from_anyof(schema.one_of, spec, depth)?);
             }
 
             // Treat any_of and one_of the same / use only the first schema of both
             if schema.any_of.len() > 0 {
-                trace!(
-                    "Creating JSON object from any_of schema for {}",
-                    schema
-                        .title
-                        .clone()
-                        .unwrap_or("Untitled Schema".to_string())
-                );
                 return Ok(json_obj_from_anyof(schema.any_of, spec, depth)?);
             }
 
