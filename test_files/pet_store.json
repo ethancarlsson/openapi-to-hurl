@@ -65,26 +65,45 @@
         }
       },
       "post": {
-        "summary": "Create a pet",
-        "operationId": "createPets",
-        "tags": [
-          "pets"
-        ],
-        "responses": {
-          "201": {
-            "description": "Null response"
+        "summary": "Add a new pet to the store",
+        "description": "Add a new pet to the store",
+        "operationId": "addPet",
+        "requestBody": {
+          "description": "Create a new pet in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            }
           },
-          "default": {
-            "description": "unexpected error",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
             "content": {
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/Pet"
                 }
               }
             }
+          },
+          "405": {
+            "description": "Invalid input"
           }
-        }
+        },
+        "security": [
+          {
+            "petstore_auth": ["write:pets", "read:pets"]
+          }
+        ]
       }
     },
     "/pets/{petId}": {

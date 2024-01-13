@@ -1,13 +1,19 @@
+use crate::custom_hurl_ast::{empty_source_info, empty_space, newline};
 use hurl_core::ast::{
-    EncodedString, Entry, HurlFile, KeyValue, LineTerminator, Method, Pos, Request, Response,
-    SourceInfo, Status, Template, TemplateElement, Version, VersionValue, Whitespace,
+    Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
+    TemplateElement, Version, VersionValue, Whitespace,
 };
+use log::trace;
 use oas3::{
-    spec::{FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, SchemaType},
+    spec::{
+        FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, RequestBody,
+        SchemaType,
+    },
     Schema, Spec,
 };
 
 use crate::cli::Arguments;
+use crate::request_body;
 
 type OApiPath<'a> = (&'a String, &'a PathItem);
 
@@ -103,13 +109,21 @@ fn to_file(
         ObjectOrReference::Ref { ref_path } => Parameter::from_ref(&spec, &ref_path),
     });
 
-    let errors = param_result_iter
+    let mut errors = param_result_iter
         .clone()
         .filter_map(|p| match p {
             Ok(_) => None,
             Err(e) => Some(e),
         })
         .collect::<Vec<RefError>>();
+
+    let request_body = match parse_request_body(operation, spec) {
+        Ok(r) => r,
+        Err(e) => {
+            errors.push(e);
+            return Err(errors);
+        }
+    };
 
     if errors.len() > 0 {
         return Err(errors);
@@ -222,7 +236,7 @@ fn to_file(
                 })
                 .collect(),
             sections: vec![],
-            body: None,
+            body: request_body,
             source_info: empty_source_info(),
         },
         response: match args.validate_response {
@@ -235,6 +249,37 @@ fn to_file(
         entries: vec![entry],
         line_terminators: vec![],
     })
+}
+
+fn parse_request_body(operation: &Operation, spec: &Spec) -> Result<Option<Body>, RefError> {
+    let request_body = match &operation.request_body {
+        Some(b) => b,
+        None => {
+            trace!(
+                "No request body found for {}",
+                operation
+                    .operation_id
+                    .clone()
+                    .unwrap_or("operationWithNoId".to_string())
+            );
+            return Ok(None);
+        }
+    };
+
+    trace!(
+        "Parsing request body for operation {}...",
+        operation
+            .operation_id
+            .clone()
+            .unwrap_or("operationWithNoId".to_string())
+    );
+
+    let body = match request_body {
+        ObjectOrReference::Object(b) => Ok(b.clone()),
+        ObjectOrReference::Ref { ref_path } => RequestBody::from_ref(&spec, &ref_path),
+    }?;
+
+    Ok(request_body::request_body::from_spec_body(body, spec)?)
 }
 
 fn status_code_200_response() -> Response {
@@ -269,42 +314,10 @@ fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {
     }
 }
 
-fn empty_space() -> Whitespace {
-    Whitespace {
-        value: "".to_string(),
-        source_info: empty_source_info(),
-    }
-}
-
 fn single_space() -> Whitespace {
     Whitespace {
         value: " ".to_string(),
         source_info: empty_source_info(),
-    }
-}
-
-fn empty_source_info() -> SourceInfo {
-    SourceInfo {
-        start: Pos { column: 0, line: 0 },
-        end: Pos { column: 0, line: 0 },
-    }
-}
-
-fn newline() -> LineTerminator {
-    LineTerminator {
-        space0: Whitespace {
-            value: "".to_string(),
-            source_info: empty_source_info(),
-        },
-
-        comment: None,
-        newline: Whitespace {
-            value: "\n".to_string(),
-            source_info: SourceInfo {
-                start: Pos { column: 0, line: 0 },
-                end: Pos { column: 0, line: 0 },
-            },
-        },
     }
 }
 

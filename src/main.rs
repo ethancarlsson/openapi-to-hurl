@@ -14,8 +14,13 @@ use oas3::Spec;
 mod cli;
 mod hurl_files;
 mod variable_files;
+mod request_body;
+mod custom_hurl_ast;
+
 
 fn main() -> Result<()> {
+    env_logger::init();
+
     let cli = Cli::parse();
     let args = cli.args();
     let spec =
@@ -139,7 +144,7 @@ mod tests {
                         method: "GET".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
                         method: "POST".to_string(),
                     },
                 ],
@@ -202,7 +207,7 @@ mod tests {
                         method: "GET".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
                         method: "POST".to_string(),
                     },
                 ],
@@ -241,7 +246,7 @@ mod tests {
                         method: "GET".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets\n".to_string(),
+                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n".to_string(),
                         method: "POST".to_string(),
                     },
                 ],
@@ -286,7 +291,7 @@ mod tests {
                         method: "GET".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
+                        file: "POST {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n".to_string(),
                         method: "POST".to_string(),
                     },
                 ],
