@@ -1,5 +1,5 @@
 use hurl_core::ast::{Body, JsonListElement};
-use log::{debug, trace};
+use log::debug;
 use oas3::{
     spec::{ObjectOrReference, RefError, RequestBody},
     Schema, Spec,
