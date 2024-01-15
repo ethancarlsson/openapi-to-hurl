@@ -2,8 +2,14 @@
 name = "openapi-to-hurl"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Ethan Carlsson <ethanmcarlsson@gmail.com>"]
+license = "MIT"
+description = "A tool to create Hurl files (https://hurl.dev/) from openapi specs"
+readme = "README.md"
+homepage = "https://github.com/ethancarlsson/openapi-to-hurl"
+repository = "https://github.com/ethancarlsson/openapi-to-hurl"
+keywords = ["cli", "openapi", "hurl", "test generation"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.75"
