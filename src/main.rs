@@ -12,32 +12,54 @@ use hurl_files::HurlFiles;
 use oas3::Spec;
 
 mod cli;
-mod hurl_files;
-mod variable_files;
-mod request_body;
 mod custom_hurl_ast;
-
+mod hurl_files;
+mod request_body;
+mod variable_files;
 
 fn main() -> Result<()> {
     env_logger::init();
 
     let cli = Cli::parse();
-    let args = cli.args();
+    let args = cli.args()?;
     let spec =
         oas3::from_path(args.path.clone()).with_context(|| format!("Issue with specification"))?;
 
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
+    let variable_files = VariableFiles::from_spec(&spec, args.custom_variables);
 
+    match args.out {
+        cli::OutStrategy::Console => out_to_console(hurl_files)?,
+        cli::OutStrategy::Files(out_path) => out_to_files(hurl_files, variable_files, out_path)?,
+    };
+
+    Ok(())
+}
+
+fn out_to_console(hurl_files: Vec<(String, Vec<HurlFileString>)>) -> Result<()> {
+    for file_contents in hurl_files {
+        for file_string in file_contents.1 {
+            println!("{}", file_string.file);
+        }
+    }
+    Ok(())
+}
+
+fn out_to_files(
+    hurl_files: Vec<(String, Vec<HurlFileString>)>,
+    variable_files: VariableFiles,
+    out_path: std::path::PathBuf,
+) -> Result<()> {
     let mut files_created_count = 0;
     for file_contents in hurl_files {
-        let dir_path = format!("{}/{}", args.out.display(), file_contents.0.clone());
+        let dir_path = format!("{}/{}", out_path.display(), file_contents.0.clone());
         fs::create_dir_all(&dir_path)
             .with_context(|| format!("couldn't create directory: {dir_path}"))?;
 
         for file_string in file_contents.1 {
             let file_path = format!(
                 "{}/{}/{}.hurl",
-                args.out.display(),
+                out_path.display(),
                 file_contents.0,
                 file_string.method
             );
@@ -50,8 +72,8 @@ fn main() -> Result<()> {
         }
     }
 
-    for v_file in VariableFiles::from_spec(&spec, args.custom_variables).files {
-        let file_path = format!("{}/{}", args.out.display(), v_file.name);
+    for v_file in variable_files.files {
+        let file_path = format!("{}/{}", out_path.display(), v_file.name);
         let existing_variable_file = match fs::read_to_string(&file_path) {
             Ok(f) => VariableFile::from_string(v_file.name.clone(), f),
             Err(_) => VariableFile::empty(v_file.name.clone()),
@@ -60,8 +82,13 @@ fn main() -> Result<()> {
         let mut file = File::create(&file_path)
             .with_context(|| format!("could not open file at {}", v_file.name))?;
 
-        file.write_all(v_file.merge(existing_variable_file).get_contents().as_bytes())
-            .with_context(|| format!("could not write to file at {file_path}"))?;
+        file.write_all(
+            v_file
+                .merge(existing_variable_file)
+                .get_contents()
+                .as_bytes(),
+        )
+        .with_context(|| format!("could not write to file at {file_path}"))?;
     }
 
     println!("Created or updated {files_created_count} hurl files");
@@ -118,7 +145,10 @@ mod tests {
     use std::{path::PathBuf, str::FromStr};
 
     use crate::{
-        cli::{Arguments, QueryParamChoice, ResponseValidationChoice}, hurl_files_from_spec_path, variable_files::CustomVariables, HurlFileString,
+        cli::{Arguments, QueryParamChoice, ResponseValidationChoice},
+        hurl_files_from_spec_path,
+        variable_files::CustomVariables,
+        HurlFileString,
     };
 
     #[test]
@@ -129,7 +159,6 @@ mod tests {
         let result = hurl_files_from_spec_path(
             &Arguments {
                 path: spec_path,
-                out: PathBuf::from_str("test").unwrap(),
                 ..Arguments::default()
             },
             &spec,

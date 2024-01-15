@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use anyhow::anyhow;
 use clap::{Parser, ValueEnum};
 
 use crate::variable_files::CustomVariables;
@@ -31,13 +32,27 @@ pub enum VariablesUpdateStrategy {
     Merge,
 }
 
+#[derive(ValueEnum, Clone, Default)]
+pub enum OutputTo {
+    /// If console is selected prints all hurl files to console. NOTE: Does not
+    /// print variables to console.
+    Console,
+    /// If file is selected "out" is required. NOTE: A variables file will also
+    /// be created.
+    #[default]
+    Files,
+}
+
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 pub struct Cli {
+    /// Where will the output go
+    #[arg(long, default_value_t = OutputTo::default(), value_enum)]
+    output_to: OutputTo,
     /// The path to the openapi specification
     path: std::path::PathBuf,
     /// Directory where the hurl files will be created
-    out: std::path::PathBuf,
+    out: Option<std::path::PathBuf>,
     /// Response validation
     #[arg(short = 'r', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
     validate_response: ResponseValidationChoice,
@@ -71,9 +86,17 @@ where
 }
 
 #[derive(Default)]
+pub enum OutStrategy {
+    // Default here for convenience in unit tests, real default is files.
+    #[default]
+    Console,
+    Files(std::path::PathBuf),
+}
+
+#[derive(Default)]
 pub struct Arguments {
     pub path: std::path::PathBuf,
-    pub out: std::path::PathBuf,
+    pub out: OutStrategy,
     pub validate_response: ResponseValidationChoice,
     pub query_params_choice: QueryParamChoice,
     pub custom_variables: CustomVariables,
@@ -82,17 +105,27 @@ pub struct Arguments {
 }
 
 impl Cli {
-    pub fn args(self) -> Arguments {
-        Arguments {
+    pub fn args(self) -> Result<Arguments, anyhow::Error> {
+        Ok(Arguments {
             path: self.path,
-            out: self.out,
+            out: match self.output_to {
+                OutputTo::Console => OutStrategy::Console,
+                OutputTo::Files => OutStrategy::Files(match self.out {
+                    Some(f) => f,
+                    None => {
+                        return Err(anyhow!(
+                            "Option `out` is required if `--output_to files` option is selected"
+                        ))
+                    }
+                }),
+            },
             validate_response: self.validate_response,
             query_params_choice: self.query_params,
             variables_update_strategy: self.variables_update_strategy,
             custom_variables: CustomVariables {
                 headers: self.header_vars,
             },
-            operation_id_selection: self.select_operation_id
-        }
+            operation_id_selection: self.select_operation_id,
+        })
     }
 }
