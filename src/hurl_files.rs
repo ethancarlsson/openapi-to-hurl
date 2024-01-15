@@ -23,6 +23,7 @@ pub struct HurlFiles {
 }
 
 pub struct LocalHurlFile {
+    pub operation: Option<String>,
     pub method: String,
     pub file: HurlFile,
 }
@@ -82,6 +83,7 @@ impl<'a> HurlFileBuilder<'a> {
             Ok(file) => self.hurl_files.push(LocalHurlFile {
                 file,
                 method: method.to_string(),
+                operation: o.operation_id.clone()
             }),
             Err(e) => self.errors.extend(e),
         }

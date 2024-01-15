@@ -61,7 +61,7 @@ fn out_to_files(
                 "{}/{}/{}.hurl",
                 out_path.display(),
                 file_contents.0,
-                file_string.method
+                file_string.filename
             );
             let mut file = File::create(&file_path)
                 .with_context(|| format!("Could not open new file at {file_path}"))?;
@@ -98,7 +98,7 @@ fn out_to_files(
 
 #[derive(Debug, PartialEq)]
 pub struct HurlFileString {
-    pub method: String,
+    pub filename: String,
     pub file: String,
 }
 
@@ -129,7 +129,7 @@ fn hurl_files_from_spec_path(
                     .hurl_files
                     .iter()
                     .map(|f| HurlFileString {
-                        method: f.method.clone(),
+                        filename: f.operation.clone().unwrap_or(f.method.clone()),
                         file: hurlfmt::format::format_text(f.file.clone(), false),
                     })
                     .collect(),
@@ -170,11 +170,11 @@ mod tests {
                 vec![
                     HurlFileString {
                         file: "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
-                        method: "GET".to_string(),
+                        filename: "listPets".to_string(),
                     },
                     HurlFileString {
                         file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
-                        method: "POST".to_string(),
+                        filename: "addPet".to_string(),
                     },
                 ],
             ),
@@ -182,7 +182,7 @@ mod tests {
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
                     file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
-                    method: "GET".to_string(),
+                    filename: "showPetById".to_string(),
                 }],
             ),
         ];
@@ -207,7 +207,7 @@ mod tests {
             "_pets".to_string(),
             vec![HurlFileString {
                 file: "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
-                method: "GET".to_string(),
+                filename: "listPets".to_string(),
             }],
         )];
         assert_eq!(expected, result.unwrap());
@@ -233,11 +233,11 @@ mod tests {
                 vec![
                     HurlFileString {
                         file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
-                        method: "GET".to_string(),
+                        filename: "listPets".to_string(),
                     },
                     HurlFileString {
                         file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
-                        method: "POST".to_string(),
+                        filename: "addPet".to_string(),
                     },
                 ],
             ),
@@ -245,7 +245,7 @@ mod tests {
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
                     file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
-                    method: "GET".to_string(),
+                    filename: "showPetById".to_string(),
                 }],
             ),
         ];
@@ -272,11 +272,11 @@ mod tests {
                 vec![
                     HurlFileString {
                         file: "GET {{host}}/pets?limit=3\n".to_string(),
-                        method: "GET".to_string(),
+                        filename: "listPets".to_string(),
                     },
                     HurlFileString {
                         file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n".to_string(),
-                        method: "POST".to_string(),
+                        filename: "addPet".to_string(),
                     },
                 ],
             ),
@@ -284,7 +284,7 @@ mod tests {
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
                     file: "GET {{host}}/pets/string_value\n".to_string(),
-                    method: "GET".to_string(),
+                    filename: "showPetById".to_string(),
                 }],
             ),
         ];
@@ -317,11 +317,11 @@ mod tests {
                 vec![
                     HurlFileString {
                         file: "GET {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
-                        method: "GET".to_string(),
+                        filename: "listPets".to_string(),
                     },
                     HurlFileString {
                         file: "POST {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n".to_string(),
-                        method: "POST".to_string(),
+                        filename: "addPet".to_string(),
                     },
                 ],
             ),
@@ -329,7 +329,7 @@ mod tests {
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
                     file: "GET {{host}}/pets/string_value\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
-                    method: "GET".to_string(),
+                    filename: "showPetById".to_string(),
                 }],
             ),
         ];
