@@ -22,3 +22,7 @@ is incomplete and in the early stages of development.
 - [x] Implement output options
     - [x] To files and directories
     - [x] To console
+- [ ] CI/CD
+    - [x] Setup github actions to run tests and build
+    - [ ] Setup CI/CD for benchmarking
+    - [ ] Setup CI/CD for changelog and versioning
