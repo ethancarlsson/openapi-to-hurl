@@ -1,0 +1,25 @@
+name: Changelog
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  update_changelog:
+    name: Update Changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Install commitlint
+        run: npm install --save actions
+      - name: Run conventional commits
+
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.github_token }}
