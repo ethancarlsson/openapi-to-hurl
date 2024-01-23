@@ -25,4 +25,4 @@ is incomplete and in the early stages of development.
 - [ ] CI/CD
     - [x] Setup github actions to run tests and build
     - [ ] Setup CI/CD for benchmarking
-    - [ ] Setup CI/CD for changelog and versioning
+    - [x] Setup CI/CD for changelog and versioning

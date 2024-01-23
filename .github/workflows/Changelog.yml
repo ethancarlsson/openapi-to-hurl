@@ -14,12 +14,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout sources
+      - name: Checkout source
         uses: actions/checkout@v2
-      - name: Install commitlint
-        run: npm install --save actions
-      - name: Run conventional commits
 
+      - name: Run conventional commits
         uses: TriPSs/conventional-changelog-action@v3
         with:
           github-token: ${{ secrets.GH_TOKEN }}
