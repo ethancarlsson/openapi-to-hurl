@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      # install and chache the toolchain
       - id: cache-rustup
         name: Cache Rust toolchain
         uses: actions/cache@v3
@@ -26,14 +28,30 @@ jobs:
           profile: minimal
           toolchain: 1.75.0
           override: true
+
       - uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release
-      - run: cargo install hyperfine
-      - uses: actions/checkout@v2
+
+      # install and cache hyperfine
+      - id: cache-hyperfine
+        name: Cache hyperfine
+        uses: actions/cache@v3
+        with:
+          path: ~/.hyperfine
+          key: hyperfine-${{ matrix.os }}-${{ matrix.rust-version }}
+
+      - if: ${{ steps.cache-hyperfine.outputs.cache-hit != 'true' }}
+        name: Install hyperfine
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: hyperfine
+
       - name: Run conventional commits
         uses: TriPSs/conventional-changelog-action@v3
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           pre-changelog-generation: changelog/pre-changelog-gen.js
+
