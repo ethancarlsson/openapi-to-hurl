@@ -5,11 +5,30 @@ use oas3::{
     Schema, Spec,
 };
 
-use crate::custom_hurl_ast::{empty_space, newline};
+use crate::{
+    cli::{Formatting, Settings},
+    custom_hurl_ast::{empty_space, newline},
+};
 
 use super::body::{parse_schema, template_from_string};
 
-pub fn from_spec_body(spec_body: RequestBody, spec: &Spec) -> Result<Option<Body>, RefError> {
+pub struct SpecBodySettings {
+    pub formatting: Formatting,
+}
+
+impl SpecBodySettings {
+    pub fn from_settings(settings: &Settings) -> Self {
+        Self {
+            formatting: settings.formatting.clone(),
+        }
+    }
+}
+
+pub fn from_spec_body(
+    spec_body: RequestBody,
+    spec: &Spec,
+    spec_body_srgs: SpecBodySettings,
+) -> Result<Option<Body>, RefError> {
     for content in spec_body.content {
         let schema = match parse_schema(content.1.schema, spec)? {
             Some(s) => s,
