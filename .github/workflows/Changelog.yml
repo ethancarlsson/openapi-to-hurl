@@ -13,9 +13,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - id: cache-rustup
+        name: Cache Rust toolchain
+        uses: actions/cache@v3
         with:
-          toolchain: stable
+          path: ~/.rustup
+          key: toolchain-${{ matrix.os }}-${{ matrix.rust-version }}
+      - if: ${{ steps.cache-rustup.outputs.cache-hit != 'true' }}
+        name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.75.0
+          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: build
