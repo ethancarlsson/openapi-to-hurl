@@ -6,7 +6,7 @@ exports.preTagGeneration = async function (tag) {
   for (let i = 0; i < 5; i++) {
     try {
       await exec(
-        "/home/runner/work/openapi-to-hurl/openapi-to-hurl/target/release/openapi-to-hurl /home/runner/work/openapi-to-hurl/openapi-to-hurl/test_files/pet_store_advanced.json --output-to console' -u millisecond --shell=none",
+        "/home/runner/work/openapi-to-hurl/openapi-to-hurl/target/release/openapi-to-hurl /home/runner/work/openapi-to-hurl/openapi-to-hurl/test_files/pet_store_advanced.json --output-to console",
       );
     } catch (e) {
       console.error(e);
