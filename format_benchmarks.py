@@ -2,7 +2,11 @@ import sys
 import re
 
 # This is a single use script. Input is taken from this command:
-# {hyperfine --warmup 10 'target/release/openapi-to-hurl test_files/pet_store_advanced.json --output-to console' -u millisecond && git log --format="%H" -n 1;}
+# {
+#    hyperfine --warmup 10 'target/release/openapi-to-hurl test_files/pet_store_advanced.json --output-to console' -u millisecond
+#    && git log --format="%H" -n 1
+#    && echo vx.x.x;
+# }
 # Intended output is a csv file
 
 result = []
@@ -21,6 +25,9 @@ for i, line in enumerate(sys.stdin):
 
     # Reading the commit ID
     if i == 4:
+        result.append(line.strip())
+    # Reading the version number passed in from pre-changelog file
+    if i == 5:
         result.append(line)
 
 

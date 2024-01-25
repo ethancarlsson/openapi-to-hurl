@@ -1,2 +1,2 @@
-mean,min,max,runs,last_commit_id
-2.2,2.1,2.8,1353,641633b6f8918e4411377b7558b74d37a950ff2a
+mean,min,max,runs,last_commit_id,version
+2.2,2.1,2.8,1353,641633b6f8918e4411377b7558b74d37a950ff2a,v0.1.0
