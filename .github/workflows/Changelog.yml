@@ -39,7 +39,7 @@ jobs:
         name: Cache hyperfine
         uses: actions/cache@v3
         with:
-          path: ~/.hyperfine
+          path: /home/runner/.cargo/bin/hyperfine
           key: hyperfine-${{ matrix.os }}-${{ matrix.rust-version }}
 
       - if: ${{ steps.cache-hyperfine.outputs.cache-hit != 'true' }}
