@@ -14,10 +14,18 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v2
-
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - run: cargo install hyperfine
+      - uses: actions/checkout@v2
       - name: Run conventional commits
         uses: TriPSs/conventional-changelog-action@v3
         with:
           github-token: ${{ secrets.GH_TOKEN }}
+          pre-changelog-generation: changelog/pre-changelog-gen.js
