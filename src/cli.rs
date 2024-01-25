@@ -43,6 +43,15 @@ pub enum OutputTo {
     Files,
 }
 
+#[derive(ValueEnum, Clone, Default)]
+pub enum Formatting {
+    /// Will not add any characters to the output that do not affect syntax
+    NoFormatting,
+    /// Will add some formatting to the request body
+    #[default]
+    RequestBodies,
+}
+
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 pub struct Cli {
@@ -69,6 +78,9 @@ pub struct Cli {
     /// How the variables file should be updated
     #[arg(long, default_value_t = VariablesUpdateStrategy::default(), value_enum)]
     variables_update_strategy: VariablesUpdateStrategy,
+    /// How the output should be formatted
+    #[arg(long, default_value_t = Formatting::default(), value_enum)]
+    formatting: Formatting
 }
 
 /// Parse a single key-value pair
@@ -94,7 +106,7 @@ pub enum OutStrategy {
 }
 
 #[derive(Default)]
-pub struct Arguments {
+pub struct Settings {
     pub path: std::path::PathBuf,
     pub out: OutStrategy,
     pub validate_response: ResponseValidationChoice,
@@ -102,11 +114,12 @@ pub struct Arguments {
     pub custom_variables: CustomVariables,
     pub variables_update_strategy: VariablesUpdateStrategy,
     pub operation_id_selection: Option<Vec<String>>,
+    pub formatting: Formatting,
 }
 
 impl Cli {
-    pub fn args(self) -> Result<Arguments, anyhow::Error> {
-        Ok(Arguments {
+    pub fn args(self) -> Result<Settings, anyhow::Error> {
+        Ok(Settings {
             path: self.path,
             out: match self.output_to {
                 OutputTo::Console => OutStrategy::Console,
@@ -126,6 +139,7 @@ impl Cli {
                 headers: self.header_vars,
             },
             operation_id_selection: self.select_operation_id,
+            formatting: self.formatting,
         })
     }
 }

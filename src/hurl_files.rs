@@ -1,4 +1,7 @@
-use crate::custom_hurl_ast::{empty_source_info, empty_space, newline};
+use crate::{
+    custom_hurl_ast::{empty_source_info, empty_space, newline},
+    request_body::request_body::SpecBodySettings,
+};
 use hurl_core::ast::{
     Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
     TemplateElement, Version, VersionValue, Whitespace,
@@ -12,7 +15,7 @@ use oas3::{
     Schema, Spec,
 };
 
-use crate::cli::Arguments;
+use crate::cli::Settings;
 use crate::request_body;
 
 type OApiPath<'a> = (&'a String, &'a PathItem);
@@ -29,7 +32,7 @@ pub struct LocalHurlFile {
 }
 
 impl HurlFiles {
-    pub fn from_oai_path(path: OApiPath, spec: &Spec, args: &Arguments) -> HurlFiles {
+    pub fn from_oai_path(path: OApiPath, spec: &Spec, args: &Settings) -> HurlFiles {
         HurlFileBuilder::new(&path, spec, args)
             .add_operation(&path.1.get, &HttpMethod::GET)
             .add_operation(&path.1.post, &HttpMethod::POST)
@@ -47,11 +50,11 @@ struct HurlFileBuilder<'a> {
     errors: Vec<RefError>,
     path: &'a OApiPath<'a>,
     spec: &'a Spec,
-    args: &'a Arguments,
+    args: &'a Settings,
 }
 
 impl<'a> HurlFileBuilder<'a> {
-    pub fn new(path: &'a OApiPath, spec: &'a Spec, args: &'a Arguments) -> HurlFileBuilder<'a> {
+    pub fn new(path: &'a OApiPath, spec: &'a Spec, args: &'a Settings) -> HurlFileBuilder<'a> {
         Self {
             hurl_files: vec![],
             errors: vec![],
@@ -83,7 +86,7 @@ impl<'a> HurlFileBuilder<'a> {
             Ok(file) => self.hurl_files.push(LocalHurlFile {
                 file,
                 method: method.to_string(),
-                operation: o.operation_id.clone()
+                operation: o.operation_id.clone(),
             }),
             Err(e) => self.errors.extend(e),
         }
@@ -104,7 +107,7 @@ fn to_file(
     spec: &Spec,
     operation: &Operation,
     method: &HttpMethod,
-    args: &Arguments,
+    settings: &Settings,
 ) -> Result<HurlFile, Vec<RefError>> {
     let param_result_iter = operation.parameters.iter().map(|p| match p {
         ObjectOrReference::Object(p) => Ok(p.clone()),
@@ -119,13 +122,14 @@ fn to_file(
         })
         .collect::<Vec<RefError>>();
 
-    let request_body = match parse_request_body(operation, spec) {
-        Ok(r) => r,
-        Err(e) => {
-            errors.push(e);
-            return Err(errors);
-        }
-    };
+    let request_body =
+        match parse_request_body(operation, spec, SpecBodySettings::from_settings(settings)) {
+            Ok(r) => r,
+            Err(e) => {
+                errors.push(e);
+                return Err(errors);
+            }
+        };
 
     if errors.len() > 0 {
         return Err(errors);
@@ -147,7 +151,7 @@ fn to_file(
         )
     });
 
-    match args.query_params_choice {
+    match settings.query_params_choice {
         crate::cli::QueryParamChoice::None => (),
         crate::cli::QueryParamChoice::Defaults => {
             let uri_with_first_query_param = format!(
@@ -211,7 +215,7 @@ fn to_file(
                 source_info: empty_source_info(),
             },
             line_terminator0: newline(),
-            headers: args
+            headers: settings
                 .custom_variables
                 .headers
                 .iter()
@@ -241,7 +245,7 @@ fn to_file(
             body: request_body,
             source_info: empty_source_info(),
         },
-        response: match args.validate_response {
+        response: match settings.validate_response {
             crate::cli::ResponseValidationChoice::No => None,
             crate::cli::ResponseValidationChoice::Http200 => Some(status_code_200_response()),
         },
@@ -253,7 +257,11 @@ fn to_file(
     })
 }
 
-fn parse_request_body(operation: &Operation, spec: &Spec) -> Result<Option<Body>, RefError> {
+fn parse_request_body(
+    operation: &Operation,
+    spec: &Spec,
+    settings: SpecBodySettings,
+) -> Result<Option<Body>, RefError> {
     let request_body = match &operation.request_body {
         Some(b) => b,
         None => {
@@ -281,7 +289,9 @@ fn parse_request_body(operation: &Operation, spec: &Spec) -> Result<Option<Body>
         ObjectOrReference::Ref { ref_path } => RequestBody::from_ref(&spec, &ref_path),
     }?;
 
-    Ok(request_body::request_body::from_spec_body(body, spec)?)
+    Ok(request_body::request_body::from_spec_body(
+        body, spec, settings,
+    )?)
 }
 
 fn status_code_200_response() -> Response {
