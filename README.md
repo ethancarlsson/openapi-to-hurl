@@ -24,5 +24,8 @@ is incomplete and in the early stages of development.
     - [x] To console
 - [ ] CI/CD
     - [x] Setup github actions to run tests and build
-    - [ ] Setup CI/CD for benchmarking
+    - [x] Setup CI/CD for benchmarking
     - [x] Setup CI/CD for changelog and versioning
+- [ ] Refactor
+    - [ ] Create an intermediate type (a "HttpOperation"?) that is independent
+        of both openapi and hurl, then move it to it's own module.
