@@ -17,9 +17,7 @@
       "get": {
         "summary": "List all pets",
         "operationId": "listPets",
-        "tags": [
-          "pets"
-        ],
+        "tags": ["pets"],
         "parameters": [
           {
             "name": "limit",
@@ -110,9 +108,7 @@
       "get": {
         "summary": "Info for a specific pet",
         "operationId": "showPetById",
-        "tags": [
-          "pets"
-        ],
+        "tags": ["pets"],
         "parameters": [
           {
             "name": "petId",
@@ -153,10 +149,7 @@
     "schemas": {
       "Pet": {
         "type": "object",
-        "required": [
-          "id",
-          "name"
-        ],
+        "required": ["id", "name"],
         "properties": {
           "id": {
             "type": "integer",
@@ -167,6 +160,16 @@
           },
           "tag": {
             "type": "string"
+          },
+          "photo_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "https://example.com/img.png",
+              "https://example.com/img2.png"
+            ]
           }
         }
       },
@@ -179,10 +182,7 @@
       },
       "Error": {
         "type": "object",
-        "required": [
-          "code",
-          "message"
-        ],
+        "required": ["code", "message"],
         "properties": {
           "code": {
             "type": "integer",

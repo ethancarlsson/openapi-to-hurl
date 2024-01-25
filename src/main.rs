@@ -145,7 +145,7 @@ mod tests {
     use std::{path::PathBuf, str::FromStr};
 
     use crate::{
-        cli::{Settings, QueryParamChoice, ResponseValidationChoice},
+        cli::{Formatting, QueryParamChoice, ResponseValidationChoice, Settings},
         hurl_files_from_spec_path,
         variable_files::CustomVariables,
         HurlFileString,
@@ -173,7 +173,7 @@ mod tests {
                         filename: "listPets".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
+                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"photo_urls\": [  \"https://example.com/img.png\" , \"https://example.com/img2.png\" ],\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
                         filename: "addPet".to_string(),
                     },
                 ],
@@ -214,6 +214,31 @@ mod tests {
     }
 
     #[test]
+    fn hurl_files_from_spec_path_with_no_formatting() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                operation_id_selection: Some(vec!["addPet".to_string()]),
+                formatting: Formatting::NoFormatting,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                file: "POST {{host}}/pets\n{\"id\":3,\"name\":\"string\",\"photo_urls\":[\"https://example.com/img.png\",\"https://example.com/img2.png\"],\"tag\":\"string\"}\n\n\nHTTP 200\n".to_string(),
+                filename: "addPet".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
     fn hurl_files_from_spec_path_with_pet_store_spec_no_query_params() {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
         let spec = oas3::from_path(spec_path.clone()).unwrap();
@@ -222,6 +247,10 @@ mod tests {
             &Settings {
                 path: spec_path,
                 query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec![
+                    "listPets".to_string(),
+                    "showPetById".to_string(),
+                ]),
                 ..Settings::default()
             },
             &spec,
@@ -230,16 +259,10 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![
             (
                 "_pets".to_string(),
-                vec![
-                    HurlFileString {
-                        file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
-                        filename: "listPets".to_string(),
-                    },
-                    HurlFileString {
-                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
-                        filename: "addPet".to_string(),
-                    },
-                ],
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                    filename: "listPets".to_string(),
+                }],
             ),
             (
                 "_pets_{petId}".to_string(),
@@ -261,6 +284,10 @@ mod tests {
                 path: spec_path,
                 validate_response: crate::cli::ResponseValidationChoice::No,
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
+                operation_id_selection: Some(vec![
+                    "listPets".to_string(),
+                    "showPetById".to_string(),
+                ]),
                 ..Settings::default()
             },
             &spec,
@@ -269,16 +296,10 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![
             (
                 "_pets".to_string(),
-                vec![
-                    HurlFileString {
-                        file: "GET {{host}}/pets?limit=3\n".to_string(),
-                        filename: "listPets".to_string(),
-                    },
-                    HurlFileString {
-                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n".to_string(),
-                        filename: "addPet".to_string(),
-                    },
-                ],
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets?limit=3\n".to_string(),
+                    filename: "listPets".to_string(),
+                }],
             ),
             (
                 "_pets_{petId}".to_string(),
@@ -306,6 +327,10 @@ mod tests {
                 },
                 query_params_choice: QueryParamChoice::None,
                 validate_response: ResponseValidationChoice::No,
+                operation_id_selection: Some(vec![
+                    "listPets".to_string(),
+                    "showPetById".to_string(),
+                ]),
                 ..Settings::default()
             },
             &spec,
@@ -318,10 +343,6 @@ mod tests {
                     HurlFileString {
                         file: "GET {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
                         filename: "listPets".to_string(),
-                    },
-                    HurlFileString {
-                        file: "POST {{host}}/pets\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"tag\": \"string\"}\n".to_string(),
-                        filename: "addPet".to_string(),
                     },
                 ],
             ),
