@@ -9,6 +9,7 @@ use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::Settings;
 use hurl_files::HurlFiles;
+use log::trace;
 use oas3::Spec;
 
 mod cli;
@@ -22,12 +23,16 @@ fn main() -> Result<()> {
 
     let cli = Cli::parse();
     let args = cli.args()?;
+    trace!("parsing oas3 from path");
     let spec =
         oas3::from_path(args.path.clone()).with_context(|| format!("Issue with specification"))?;
 
+    trace!("transforming oas3 to hurl files");
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
+    trace!("transforming oas3 to hurl variables file");
     let variable_files = VariableFiles::from_spec(&spec, args.custom_variables);
 
+    trace!("returning values out");
     match args.out {
         cli::OutStrategy::Console => out_to_console(hurl_files)?,
         cli::OutStrategy::Files(out_path) => out_to_files(hurl_files, variable_files, out_path)?,
