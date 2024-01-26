@@ -3,7 +3,7 @@ use std::error::Error;
 use anyhow::anyhow;
 use clap::{Parser, ValueEnum};
 
-use crate::variable_files::CustomVariables;
+use crate::{variable_files::CustomVariables, content_type::ContentType};
 
 #[derive(ValueEnum, Clone, Default)]
 pub enum ResponseValidationChoice {
@@ -80,7 +80,12 @@ pub struct Cli {
     variables_update_strategy: VariablesUpdateStrategy,
     /// How the output should be formatted
     #[arg(long, default_value_t = Formatting::default(), value_enum)]
-    formatting: Formatting
+    formatting: Formatting,
+    /// Content type of the request. If the selected content type is not available in the schema or not
+    /// supported by this tool the tool will select the first scpecified content type supported by this
+    /// tool. If no valid content type is found the tool will use an empty request body.
+    #[arg(long, default_value_t = ContentType::default(), value_enum)]
+    content_type: ContentType
 }
 
 /// Parse a single key-value pair
@@ -115,6 +120,7 @@ pub struct Settings {
     pub variables_update_strategy: VariablesUpdateStrategy,
     pub operation_id_selection: Option<Vec<String>>,
     pub formatting: Formatting,
+    pub content_type: ContentType,
 }
 
 impl Cli {
@@ -140,6 +146,7 @@ impl Cli {
             },
             operation_id_selection: self.select_operation_id,
             formatting: self.formatting,
+            content_type: self.content_type,
         })
     }
 }
