@@ -147,6 +147,7 @@ fn hurl_files_from_spec_path(
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
     use std::{path::PathBuf, str::FromStr};
 
     use crate::{
