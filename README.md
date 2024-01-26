@@ -12,7 +12,7 @@ is incomplete and in the early stages of development.
     - [x] JSON
     - [ ] XML
     - [ ] GraphQL
-    - [ ] Plain Text
+    - [x] Plain Text
 - [ ] Improve JSON formatting
     - [ ] Offer unformatted JSON option
     - [ ] Add new line at the end of objects and array structs

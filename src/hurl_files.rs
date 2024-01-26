@@ -262,22 +262,22 @@ fn parse_request_body(
     spec: &Spec,
     settings: SpecBodySettings,
 ) -> Result<Option<Body>, RefError> {
+    let operation_id = operation
+                    .operation_id
+                    .clone()
+                    .unwrap_or("operationWithNoId".to_string());
     let request_body = match &operation.request_body {
         Some(b) => b,
         None => {
             trace!(
-                "No request body found for {}",
-                operation
-                    .operation_id
-                    .clone()
-                    .unwrap_or("operationWithNoId".to_string())
+                "No request body found for {}", operation_id
             );
             return Ok(None);
         }
     };
 
     trace!(
-        "Parsing request body for operation {}...",
+        "Parsing request body for operation {}",
         operation
             .operation_id
             .clone()
@@ -290,7 +290,10 @@ fn parse_request_body(
     }?;
 
     Ok(request_body::request_body::from_spec_body(
-        body, spec, settings,
+        body,
+        spec,
+        operation_id,
+        settings,
     )?)
 }
 

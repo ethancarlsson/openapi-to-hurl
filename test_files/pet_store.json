@@ -73,6 +73,53 @@
               "schema": {
                 "$ref": "#/components/schemas/Pet"
               }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "10,doggie,"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Invalid input"
+          }
+        },
+        "security": [
+          {
+            "petstore_auth": ["write:pets", "read:pets"]
+          }
+        ]
+      },
+      "patch": {
+        "summary": "Update a pet",
+        "description": "Update a pet in the pet store",
+        "operationId": "updatePet",
+        "requestBody": {
+          "description": "Update a pet in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              }
             }
           },
           "required": true

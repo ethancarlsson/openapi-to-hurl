@@ -13,6 +13,7 @@ use log::trace;
 use oas3::Spec;
 
 mod cli;
+mod content_type;
 mod custom_hurl_ast;
 mod hurl_files;
 mod request_body;
@@ -154,7 +155,7 @@ mod tests {
         cli::{Formatting, QueryParamChoice, ResponseValidationChoice, Settings},
         hurl_files_from_spec_path,
         variable_files::CustomVariables,
-        HurlFileString,
+        HurlFileString, content_type::ContentType,
     };
 
     #[test]
@@ -181,6 +182,10 @@ mod tests {
                     HurlFileString {
                         file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"photo_urls\": [  \"https://example.com/img.png\" , \"https://example.com/img2.png\" ],\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
                         filename: "addPet".to_string(),
+                    },
+                    HurlFileString {
+                        file: "PATCH {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"photo_urls\": [  \"https://example.com/img.png\" , \"https://example.com/img2.png\" ],\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
+                        filename: "updatePet".to_string(),
                     },
                 ],
             ),
@@ -278,6 +283,59 @@ mod tests {
                 }],
             ),
         ];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_path_with_plain_text() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["addPet".to_string()]),
+                content_type: ContentType::PlainText,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                file: "POST {{host}}/pets\n```10,doggie,```\n\n\nHTTP 200\n".to_string(),
+                filename: "addPet".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_path_with_plain_text_option_but_no_plain_text_in_schema_selects_first_valid() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["updatePet".to_string()]),
+                content_type: ContentType::PlainText,
+                formatting: Formatting::NoFormatting,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                file: "PATCH {{host}}/pets\n{\"id\":3,\"name\":\"string\",\"photo_urls\":[\"https://example.com/img.png\",\"https://example.com/img2.png\"],\"tag\":\"string\"}\n\n\nHTTP 200\n".to_string(),
+                filename: "updatePet".to_string(),
+            }],
+        )];
         assert_eq!(expected, result.unwrap());
     }
 
