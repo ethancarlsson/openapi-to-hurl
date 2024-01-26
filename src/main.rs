@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     let args = cli.args()?;
     trace!("parsing oas3 from path");
     let spec =
-        oas3::from_path(args.path.clone()).with_context(|| format!("Issue with specification"))?;
+        oas3::from_path(args.path.clone()).with_context(|| format!("Invalid Open API 3.1 Specification. This tool only aims to support OpenAPI 3.1 and up."))?;
 
     trace!("transforming oas3 to hurl files");
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
@@ -69,10 +69,10 @@ fn out_to_files(
                 file_string.filename
             );
             let mut file = File::create(&file_path)
-                .with_context(|| format!("Could not open new file at {file_path}"))?;
+                .with_context(|| format!("Could not open file at {file_path}. Most likely because the directory `{}` does not exist", out_path.display()))?;
 
             file.write_all(file_string.file.as_bytes())
-                .with_context(|| format!("could not write to file at {file_path}"))?;
+                .with_context(|| format!("Could not write to file at {file_path}"))?;
             files_created_count += 1
         }
     }
@@ -85,7 +85,7 @@ fn out_to_files(
         };
 
         let mut file = File::create(&file_path)
-            .with_context(|| format!("could not open file at {}", v_file.name))?;
+            .with_context(|| format!("Could not open file at {file_path}. Most likely because the directory `{}` does not exist", out_path.display()))?;
 
         file.write_all(
             v_file
