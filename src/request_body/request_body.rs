@@ -1,15 +1,15 @@
 use super::json_request_body::parse_json_from_schema;
-use hurl_core::ast::{Body, MultilineString, TemplateElement};
-use log::{trace, warn};
-use oas3::{
-    spec::{RefError, RequestBody},
-    Schema, Spec,
-};
-
 use crate::{
     cli::{Formatting, Settings},
     content_type::ContentType,
     custom_hurl_ast::{empty_source_info, empty_space, newline},
+};
+use anyhow::Context;
+use hurl_core::ast::{Body, MultilineString, TemplateElement};
+use log::{debug, trace, warn};
+use oas3::{
+    spec::{RefError, RequestBody},
+    Schema, Spec,
 };
 
 use super::body::parse_schema;
@@ -73,12 +73,22 @@ pub fn from_spec_body(
         ContentType::Json => {
             trace!("parsing JSON request body");
             match parse_json_from_schema(schema, spec, 1, &settings)? {
-                Some(v) => Ok(Some(Body {
-                    line_terminators: vec![],
-                    space0: empty_space(),
-                    value: hurl_core::ast::Bytes::Json(v),
-                    line_terminator0: newline(),
-                })),
+                Some(v) => match to_json_string(&v, settings) {
+                    Ok(inner_json) => Ok(Some(Body {
+                        line_terminators: vec![],
+                        space0: empty_space(),
+                        value: hurl_core::ast::Bytes::MultilineString(MultilineString::Json(text(
+                            inner_json,
+                        ))),
+                        line_terminator0: newline(),
+                    })),
+                    Err(e) => {
+                        // There's no real reason this should happen.
+                        debug!("Could not transform the specification for {operation_id} to JSON {e}. Defaulting to empty request body");
+
+                        Ok(None)
+                    }
+                },
                 None => Ok(None),
             }
         }
@@ -117,17 +127,34 @@ fn parse_plain_text(schema: Schema) -> Result<Option<hurl_core::ast::MultilineSt
             }))),
         },
         // If there's no example we can't tell the structure just give an empty value
-        None => Ok(Some(MultilineString::Text(hurl_core::ast::Text {
-            space: empty_space(),
-            newline: empty_space(),
-            value: hurl_core::ast::Template {
-                delimiter: None,
-                source_info: empty_source_info(),
-                elements: vec![TemplateElement::String {
-                    value: "".to_string(),
-                    encoded: "".to_string(),
-                }],
-            },
-        }))),
+        None => Ok(Some(MultilineString::Text(text("".to_string())))),
+    }
+}
+
+fn text(element: String) -> hurl_core::ast::Text {
+    hurl_core::ast::Text {
+        space: empty_space(),
+        newline: empty_space(),
+        value: hurl_core::ast::Template {
+            delimiter: Some('\n'),
+            source_info: empty_source_info(),
+            elements: vec![TemplateElement::String {
+                value: "".to_string(),
+                encoded: element,
+            }],
+        },
+    }
+}
+
+fn to_json_string(
+    json_value: &serde_json::Value,
+    settings: SpecBodySettings,
+) -> Result<String, anyhow::Error> {
+    match settings.formatting {
+        Formatting::NoFormatting => {
+            serde_json::to_string(json_value).with_context(|| "couldn't serialize to string")
+        }
+        Formatting::RequestBodies => serde_json::to_string_pretty(json_value)
+            .with_context(|| "couldn't serialize to pretty string"),
     }
 }

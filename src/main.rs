@@ -149,14 +149,29 @@ fn hurl_files_from_spec_path(
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
+    use serde_json::json;
     use std::{path::PathBuf, str::FromStr};
 
     use crate::{
         cli::{Formatting, QueryParamChoice, ResponseValidationChoice, Settings},
+        content_type::ContentType,
         hurl_files_from_spec_path,
         variable_files::CustomVariables,
-        HurlFileString, content_type::ContentType,
+        HurlFileString,
     };
+
+    // Also works for updatePet
+    fn get_add_pet_request_body() -> serde_json::Value {
+        json!({
+        "id": 3,
+        "name": "string",
+        "photo_urls": [
+          "https://example.com/img.png",
+          "https://example.com/img2.png"
+        ],
+        "tag": "string"
+          })
+    }
 
     #[test]
     fn hurl_files_from_spec_path_with_pet_store_spec() {
@@ -171,6 +186,8 @@ mod tests {
             &spec,
         );
 
+        let add_pet_request_body = get_add_pet_request_body();
+
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![
             (
                 "_pets".to_string(),
@@ -180,11 +197,15 @@ mod tests {
                         filename: "listPets".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"photo_urls\": [  \"https://example.com/img.png\" , \"https://example.com/img2.png\" ],\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
+                        file: "POST {{host}}/pets\n```json\n".to_string()
+                            + &serde_json::to_string_pretty(&add_pet_request_body).unwrap()
+                            + "\n```\n\n\nHTTP 200\n",
                         filename: "addPet".to_string(),
                     },
                     HurlFileString {
-                        file: "PATCH {{host}}/pets\n{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"photo_urls\": [  \"https://example.com/img.png\" , \"https://example.com/img2.png\" ],\n  \"tag\": \"string\"}\n\n\nHTTP 200\n".to_string(),
+                        file: "PATCH {{host}}/pets\n```json\n".to_string()
+                            + &serde_json::to_string_pretty(&add_pet_request_body).unwrap()
+                            + &"\n```\n\n\nHTTP 200\n".to_string(),
                         filename: "updatePet".to_string(),
                     },
                 ],
@@ -239,10 +260,14 @@ mod tests {
             &spec,
         );
 
+        let add_pet_request_body = get_add_pet_request_body();
+
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets\n{\"id\":3,\"name\":\"string\",\"photo_urls\":[\"https://example.com/img.png\",\"https://example.com/img2.png\"],\"tag\":\"string\"}\n\n\nHTTP 200\n".to_string(),
+                file: "POST {{host}}/pets\n```json\n".to_string()
+                    + &add_pet_request_body.to_string()
+                    + &"\n```\n\n\nHTTP 200\n".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];
@@ -313,7 +338,8 @@ mod tests {
     }
 
     #[test]
-    fn hurl_files_from_spec_path_with_plain_text_option_but_no_plain_text_in_schema_selects_first_valid() {
+    fn hurl_files_from_spec_path_with_plain_text_option_but_no_plain_text_in_schema_selects_first_valid(
+    ) {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
         let spec = oas3::from_path(spec_path.clone()).unwrap();
 
@@ -329,10 +355,12 @@ mod tests {
             &spec,
         );
 
+        let request_body = get_add_pet_request_body();
+
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "PATCH {{host}}/pets\n{\"id\":3,\"name\":\"string\",\"photo_urls\":[\"https://example.com/img.png\",\"https://example.com/img2.png\"],\"tag\":\"string\"}\n\n\nHTTP 200\n".to_string(),
+                file: "PATCH {{host}}/pets\n```json\n".to_string() + &request_body.to_string() + &"\n```\n\n\nHTTP 200\n".to_string(),
                 filename: "updatePet".to_string(),
             }],
         )];
