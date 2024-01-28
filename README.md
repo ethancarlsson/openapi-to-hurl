@@ -13,9 +13,9 @@ is incomplete and in the early stages of development.
     - [ ] XML
     - [ ] GraphQL
     - [x] Plain Text
-- [ ] Improve JSON formatting
-    - [ ] Offer unformatted JSON option
-    - [ ] Add new line at the end of objects and array structs
+- [x] Improve JSON formatting
+    - [x] Offer unformatted JSON option
+    - [x] Add new line at the end of objects and array structs
 - [ ] Implement filtering options
     - [x] Filter by operationId
     - [ ] Filter by tag
@@ -27,5 +27,5 @@ is incomplete and in the early stages of development.
     - [x] Setup CI/CD for benchmarking
     - [x] Setup CI/CD for changelog and versioning
 - [ ] Refactor
-    - [ ] Create an intermediate type (a "HttpOperation"?) that is independent
-        of both openapi and hurl, then move it to it's own module.
+    - [ ] Figure out what needs to be refactored in order to make a tool that
+        does the reverse of this tool, builds docs from hurl files.
