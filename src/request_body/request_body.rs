@@ -11,6 +11,7 @@ use oas3::{
     spec::{RefError, RequestBody},
     Schema, Spec,
 };
+use serde_json::Map;
 
 use super::body::parse_schema;
 
@@ -72,7 +73,7 @@ pub fn from_spec_body(
     match content_type {
         ContentType::Json => {
             trace!("parsing JSON request body");
-            match parse_json_from_schema(schema, spec, 1, &settings)? {
+            match parse_json_from_schema(schema, spec, &settings)? {
                 Some(v) => match to_json_string(&v, settings) {
                     Ok(inner_json) => Ok(Some(Body {
                         line_terminators: vec![],

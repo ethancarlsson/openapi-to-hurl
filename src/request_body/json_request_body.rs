@@ -10,7 +10,6 @@ use super::request_body::SpecBodySettings;
 pub fn parse_json_from_schema(
     schema: Schema,
     spec: &Spec,
-    depth: usize,
     settings: &SpecBodySettings,
 ) -> Result<Option<serde_json::Value>, RefError> {
     if schema.read_only.unwrap_or(false) {
@@ -34,7 +33,7 @@ pub fn parse_json_from_schema(
                 SimpleJsonValue::Array => match schema.items {
                     Some(items_schema) => {
                         let schema = match items_schema.resolve(spec) {
-                            Ok(s) => parse_json_from_schema(s, spec, depth, settings)?,
+                            Ok(s) => parse_json_from_schema(s, spec, settings)?,
                             Err(e) => return Err(e),
                         };
 
@@ -49,12 +48,7 @@ pub fn parse_json_from_schema(
                     let mut props = Map::new();
 
                     for prop in schema.properties {
-                        let val = parse_json_from_schema(
-                            prop.1.resolve(spec)?,
-                            spec,
-                            depth + 1,
-                            settings,
-                        )?;
+                        let val = parse_json_from_schema(prop.1.resolve(spec)?, spec, settings)?;
 
                         match val {
                             Some(v) => props.insert(prop.0, v),
@@ -68,21 +62,16 @@ pub fn parse_json_from_schema(
         }
         None => {
             if schema.all_of.len() > 0 {
-                return Ok(Some(json_obj_from_allof(
-                    schema.all_of,
-                    spec,
-                    depth,
-                    settings,
-                )?));
+                return Ok(Some(json_obj_from_allof(schema.all_of, spec, settings)?));
             }
 
             if schema.one_of.len() > 0 {
-                return Ok(json_obj_from_anyof(schema.one_of, spec, depth, &settings)?);
+                return Ok(json_obj_from_anyof(schema.one_of, spec, &settings)?);
             }
 
             // Treat any_of and one_of the same / use only the first schema of both
             if schema.any_of.len() > 0 {
-                return Ok(json_obj_from_anyof(schema.any_of, spec, depth, &settings)?);
+                return Ok(json_obj_from_anyof(schema.any_of, spec, &settings)?);
             }
 
             debug!("Couldn't build anything from schema. Returning null...");
@@ -119,11 +108,10 @@ fn default_json_value_from_schema_type(schema_type: oas3::spec::SchemaType) -> S
 fn json_obj_from_anyof(
     anyof: Vec<ObjectOrReference<Schema>>,
     spec: &Spec,
-    depth: usize,
     settings: &SpecBodySettings,
 ) -> Result<Option<serde_json::Value>, RefError> {
     for schema in &anyof {
-        return parse_json_from_schema(schema.resolve(spec)?, spec, depth, &settings);
+        return parse_json_from_schema(schema.resolve(spec)?, spec, &settings);
     }
 
     Ok(Some(serde_json::Value::Object(Map::new())))
@@ -132,13 +120,12 @@ fn json_obj_from_anyof(
 fn json_obj_from_allof(
     allof: Vec<ObjectOrReference<Schema>>,
     spec: &Spec,
-    depth: usize,
     settings: &SpecBodySettings,
 ) -> Result<serde_json::Value, RefError> {
     let mut props = Map::new();
     for schema in allof {
         for prop in schema.resolve(spec)?.properties {
-            let value = parse_json_from_schema(prop.1.resolve(spec)?, spec, depth + 1, &settings)?;
+            let value = parse_json_from_schema(prop.1.resolve(spec)?, spec, &settings)?;
             match value {
                 Some(v) => {
                     props.insert(prop.0, v);
