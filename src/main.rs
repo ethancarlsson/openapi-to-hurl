@@ -321,7 +321,7 @@ mod tests {
                 path: spec_path,
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
-                content_type: ContentType::PlainText,
+                content_type: ContentType::Text,
                 ..Settings::default()
             },
             &spec,
@@ -348,7 +348,7 @@ mod tests {
                 path: spec_path,
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["updatePet".to_string()]),
-                content_type: ContentType::PlainText,
+                content_type: ContentType::Text,
                 formatting: Formatting::NoFormatting,
                 ..Settings::default()
             },

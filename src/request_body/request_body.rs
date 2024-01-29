@@ -11,7 +11,6 @@ use oas3::{
     spec::{RefError, RequestBody},
     Schema, Spec,
 };
-use serde_json::Map;
 
 use super::body::parse_schema;
 
@@ -93,7 +92,7 @@ pub fn from_spec_body(
                 None => Ok(None),
             }
         }
-        ContentType::PlainText => match parse_plain_text(schema)? {
+        ContentType::Text => match parse_plain_text(schema)? {
             Some(v) => Ok(Some(Body {
                 line_terminators: vec![],
                 space0: empty_space(),

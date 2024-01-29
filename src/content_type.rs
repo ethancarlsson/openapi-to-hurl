@@ -1,11 +1,11 @@
 use clap::ValueEnum;
 
-const PLAIN_TEXT: &str = "text/plain";
+const PLAIN_TEXT: &str = "text";
 const JSON: &str = "json";
 
 #[derive(ValueEnum, Clone, Default)]
 pub enum ContentType {
-    PlainText,
+    Text,
     #[default]
     Json,
 }
@@ -14,7 +14,7 @@ pub enum ContentType {
 impl ContentType {
     pub fn matches_string(&self, str: &String) -> bool {
         match self {
-            ContentType::PlainText => str.contains(PLAIN_TEXT),
+            ContentType::Text => str.contains(PLAIN_TEXT),
             ContentType::Json => str.contains(JSON),
         }
     }
@@ -28,7 +28,7 @@ impl ContentType {
 
     pub fn to_str(&self) -> &'static str {
         match self {
-            ContentType::PlainText => PLAIN_TEXT,
+            ContentType::Text => PLAIN_TEXT,
             ContentType::Json => JSON,
         }
     }
@@ -39,7 +39,7 @@ impl ContentType {
 
     pub fn from_string(content_type: &String) -> Result<Self, String> {
         if content_type.contains(PLAIN_TEXT) {
-            Ok(Self::PlainText)
+            Ok(Self::Text)
         } else if content_type.contains(JSON) {
             Ok(Self::Json)
         } else {
