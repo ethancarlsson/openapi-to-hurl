@@ -26,6 +26,7 @@ is incomplete and in the early stages of development.
     - [x] Setup github actions to run tests and build
     - [x] Setup CI/CD for benchmarking
     - [x] Setup CI/CD for changelog and versioning
+    - [ ] Trigger release to cargo on version bump
 - [ ] Refactor
     - [ ] Figure out what needs to be refactored in order to make a tool that
         does the reverse of this tool, builds docs from hurl files.
