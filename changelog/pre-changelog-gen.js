@@ -28,5 +28,3 @@ exports.preTagGeneration = async function (tag) {
     console.error(`err: ${e}`);
   }
 };
-
-exports.preTagGeneration("test");
