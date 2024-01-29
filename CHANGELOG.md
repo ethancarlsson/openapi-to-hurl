@@ -1,3 +1,12 @@
+## [0.2.1](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.0...v0.2.1) (2024-01-29)
+
+
+### Bug Fixes
+
+* Change `plain-text` to `text` for `content-type` option ([bc59e9b](https://github.com/ethancarlsson/openapi-to-hurl/commit/bc59e9b40804c0215ab7b1cea0cd9976eb427763))
+
+
+
 # [0.2.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.1.0...v0.2.0) (2024-01-29)
 
 
