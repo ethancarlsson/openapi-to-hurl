@@ -17,6 +17,7 @@ mod content_type;
 mod custom_hurl_ast;
 mod hurl_files;
 mod request_body;
+mod response;
 mod variable_files;
 
 fn main() -> Result<()> {
@@ -246,6 +247,31 @@ mod tests {
     }
 
     #[test]
+    fn hurl_files_from_spec_path_with_nonerror_validation_selected() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                operation_id_selection: Some(vec!["listPets".to_string()]),
+                validate_response: ResponseValidationChoice::NonError,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                file: "GET {{host}}/pets?limit=3\n\nHTTP *\n[Asserts]\nstatus < 400\n".to_string(),
+                filename: "listPets".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
     fn hurl_files_from_spec_path_with_no_formatting() {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
         let spec = oas3::from_path(spec_path.clone()).unwrap();
@@ -360,7 +386,9 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "PATCH {{host}}/pets\n```json\n".to_string() + &request_body.to_string() + &"\n```\n\n\nHTTP 200\n".to_string(),
+                file: "PATCH {{host}}/pets\n```json\n".to_string()
+                    + &request_body.to_string()
+                    + &"\n```\n\n\nHTTP 200\n".to_string(),
                 filename: "updatePet".to_string(),
             }],
         )];

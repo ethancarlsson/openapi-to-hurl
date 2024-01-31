@@ -1,12 +1,13 @@
 use crate::{
     custom_hurl_ast::{empty_source_info, empty_space, newline},
     request_body::request_body::SpecBodySettings,
+    response::response_validation::validate_response_not_error
 };
 use hurl_core::ast::{
     Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
     TemplateElement, Version, VersionValue, Whitespace,
 };
-use log::trace;
+use log::{trace, warn};
 use oas3::{
     spec::{
         FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, RequestBody,
@@ -247,7 +248,11 @@ fn to_file(
         },
         response: match settings.validate_response {
             crate::cli::ResponseValidationChoice::No => None,
-            crate::cli::ResponseValidationChoice::Http200 => Some(status_code_200_response()),
+            crate::cli::ResponseValidationChoice::Http200 => {
+                warn!("Using deprecated option `--validate-response http-200`");
+                Some(status_code_200_response())
+            },
+            crate::cli::ResponseValidationChoice::NonError => Some(validate_response_not_error())
         },
     };
 
@@ -263,15 +268,14 @@ fn parse_request_body(
     settings: SpecBodySettings,
 ) -> Result<Option<Body>, RefError> {
     let operation_id = operation
-                    .operation_id
-                    .clone()
-                    .unwrap_or("operationWithNoId".to_string());
+        .operation_id
+        .clone()
+        .unwrap_or("operationWithNoId".to_string());
+
     let request_body = match &operation.request_body {
         Some(b) => b,
         None => {
-            trace!(
-                "No request body found for {}", operation_id
-            );
+            trace!("No request body found for {}", operation_id);
             return Ok(None);
         }
     };
