@@ -28,5 +28,5 @@ is incomplete and in the early stages of development.
     - [x] Setup CI/CD for changelog and versioning
     - [ ] Trigger release to cargo on version bump
 - [ ] Refactor
-    - [ ] Figure out what needs to be refactored in order to make a tool that
-        does the reverse of this tool, builds docs from hurl files.
+    - [ ] Make add options to have this work like a true unix tool that takes
+        text as input and outputs text
