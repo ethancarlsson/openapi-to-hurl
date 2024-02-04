@@ -2,7 +2,7 @@ use super::json_request_body::parse_json_from_schema;
 use crate::{
     cli::{Formatting, Settings},
     content_type::ContentType,
-    custom_hurl_ast::{empty_source_info, empty_space, newline},
+    custom_hurl_ast::{empty_source_info, empty_space, newline}, schema::schema::parse_schema,
 };
 use anyhow::Context;
 use hurl_core::ast::{Body, MultilineString, TemplateElement};
@@ -11,8 +11,6 @@ use oas3::{
     spec::{RefError, RequestBody},
     Schema, Spec,
 };
-
-use super::body::parse_schema;
 
 pub struct SpecBodySettings {
     pub formatting: Formatting,
