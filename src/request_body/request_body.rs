@@ -112,7 +112,7 @@ fn parse_plain_text(schema: Schema) -> Result<Option<hurl_core::ast::MultilineSt
 
     match schema.example {
         Some(example) => match example {
-            _ => Ok(Some(MultilineString::Text(hurl_core::ast::Text {
+            e => Ok(Some(MultilineString::Text(hurl_core::ast::Text {
                 space: empty_space(),
                 newline: empty_space(),
                 value: hurl_core::ast::Template {
@@ -121,7 +121,7 @@ fn parse_plain_text(schema: Schema) -> Result<Option<hurl_core::ast::MultilineSt
                     elements: vec![TemplateElement::String {
                         value: "".to_string(),
                         // It thinks it's json so it adds unnecessary " characters around strings
-                        encoded: example.to_string().trim_matches('"').to_string(),
+                        encoded: rem_first_and_last(e.to_string()),
                     }],
                 },
             }))),
@@ -129,6 +129,14 @@ fn parse_plain_text(schema: Schema) -> Result<Option<hurl_core::ast::MultilineSt
         // If there's no example we can't tell the structure just give an empty value
         None => Ok(Some(MultilineString::Text(text("".to_string())))),
     }
+}
+
+// https://stackoverflow.com/questions/65976432/how-to-remove-first-and-last-character-of-a-string-in-rust
+fn rem_first_and_last(value: String) -> String {
+    let mut chars = value.chars();
+    chars.next();
+    chars.next_back();
+    chars.as_str().to_string()
 }
 
 fn text(element: String) -> hurl_core::ast::Text {

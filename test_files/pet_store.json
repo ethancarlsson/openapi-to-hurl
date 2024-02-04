@@ -77,7 +77,7 @@
             "text/plain": {
               "schema": {
                 "type": "string",
-                "example": "10,doggie,"
+                "example": "10,\"doggie\""
               }
             }
           },
