@@ -8,6 +8,8 @@ is incomplete and in the early stages of development.
     - [x] No validation
     - [x] Response code validation
     - [ ] Full response validation
+        - [ ] Plain Text
+        - [ ] JSON
 - [ ] Support for request/response formats
     - [x] JSON
     - [ ] XML

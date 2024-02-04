@@ -1,7 +1,7 @@
 use crate::{
     custom_hurl_ast::{empty_source_info, empty_space, newline},
     request_body::request_body::SpecBodySettings,
-    response::response_validation::validate_response_not_error
+    response::response_validation::{validate_response_not_error, validation_response_full}
 };
 use hurl_core::ast::{
     Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
@@ -252,7 +252,11 @@ fn to_file(
                 warn!("Using deprecated option `--validate-response http-200`");
                 Some(status_code_200_response())
             },
-            crate::cli::ResponseValidationChoice::NonError => Some(validate_response_not_error())
+            crate::cli::ResponseValidationChoice::NonError => Some(validate_response_not_error()),
+            crate::cli::ResponseValidationChoice::Full => match validation_response_full(operation, spec, &settings.content_type) {
+                Ok(response) => response,
+                Err(_) => todo!(),
+            }
         },
     };
 

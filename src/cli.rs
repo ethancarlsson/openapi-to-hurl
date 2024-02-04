@@ -13,7 +13,9 @@ pub enum ResponseValidationChoice {
     /// HTTP Status Code. WARNING this will be deprecated in version 1
     Http200,
     /// Validates the result is any status code less than 400
-    NonError
+     NonError,
+    /// Validates the structure and types of the entire response
+    Full,
 }
 
 #[derive(ValueEnum, Clone, Default)]

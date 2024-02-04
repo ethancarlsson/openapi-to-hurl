@@ -18,6 +18,7 @@ mod custom_hurl_ast;
 mod hurl_files;
 mod request_body;
 mod response;
+pub mod schema;
 mod variable_files;
 
 fn main() -> Result<()> {
@@ -27,7 +28,7 @@ fn main() -> Result<()> {
     let args = cli.args()?;
     trace!("parsing oas3 from path");
     let spec =
-        oas3::from_path(args.path.clone()).with_context(|| format!("Invalid Open API 3.1 Specification. This tool only aims to support OpenAPI 3.1 and up."))?;
+        oas3::from_path(&args.path).with_context(|| format!("Invalid Open API 3.1 Specification. This tool only aims to support OpenAPI 3.1 and up."))?;
 
     trace!("transforming oas3 to hurl files");
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
@@ -264,7 +265,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "GET {{host}}/pets?limit=3\n\nHTTP *\n[Asserts]\nstatus < 400\n".to_string(),
+                file: "GET {{host}}/pets?limit=3\n\nHTTP *\n[Asserts]\nstatus < 400".to_string(),
                 filename: "listPets".to_string(),
             }],
         )];
@@ -357,6 +358,33 @@ mod tests {
             "_pets".to_string(),
             vec![HurlFileString {
                 file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\n\nHTTP 200\n".to_string(),
+                filename: "addPet".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_path_with_plain_text_and_full_validation() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["addPet".to_string()]),
+                content_type: ContentType::Text,
+                validate_response: ResponseValidationChoice::Full,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP *\n[Asserts]\nstatus < 400\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert max length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];
