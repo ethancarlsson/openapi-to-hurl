@@ -330,7 +330,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets\n```10,\\\"doggie\\\"```\n\n\nHTTP 200\n".to_string(),
+                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\n\nHTTP 200\n".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];
