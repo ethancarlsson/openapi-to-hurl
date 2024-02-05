@@ -1,3 +1,12 @@
+## [0.2.2](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.1...v0.2.2) (2024-02-05)
+
+
+### Bug Fixes
+
+* Add a delimiter to multiline strings ([f70b00e](https://github.com/ethancarlsson/openapi-to-hurl/commit/f70b00e118ff46ef2bf2d65d3111bca4b04fdc41))
+
+
+
 ## [0.2.1](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.0...v0.2.1) (2024-01-29)
 
 
