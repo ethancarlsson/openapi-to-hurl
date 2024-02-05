@@ -116,7 +116,7 @@ fn parse_plain_text(schema: Schema) -> Result<Option<hurl_core::ast::MultilineSt
                 space: empty_space(),
                 newline: empty_space(),
                 value: hurl_core::ast::Template {
-                    delimiter: None,
+                    delimiter: Some('\n'),
                     source_info: empty_source_info(),
                     elements: vec![TemplateElement::String {
                         value: "".to_string(),
