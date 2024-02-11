@@ -171,7 +171,10 @@ mod tests {
           "https://example.com/img.png",
           "https://example.com/img2.png"
         ],
-        "tag": "string"
+        "tag": "string",
+        "inner": {
+            "test": "string"
+        }
           })
     }
 
@@ -384,7 +387,42 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP *\n[Asserts]\nstatus < 400\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert max length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
+                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP *\n[Asserts]\n\nstatus < 400\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert max length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
+                filename: "addPet".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_path_with_json_and_full_validation() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["addPet".to_string()]),
+                content_type: ContentType::Json,
+                validate_response: ResponseValidationChoice::Full,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                        file: "POST {{host}}/pets\n```json\n".to_string()
+                            + &serde_json::to_string_pretty(&get_add_pet_request_body()).unwrap()
+                            + "\n```\n\nHTTP *"
+                            + "\n[Asserts]"
+                            + "\n\nstatus < 400"
+                            + "\njsonpath \"$\" isCollection"
+                            + "\njsonpath \"$.id\" isInteger"
+                            + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
+                            + "\njsonpath \"$.name\" isString\njsonpath \"$.photo_urls\" isCollection",
                 filename: "addPet".to_string(),
             }],
         )];

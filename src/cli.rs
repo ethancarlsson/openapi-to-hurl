@@ -3,7 +3,7 @@ use std::error::Error;
 use anyhow::anyhow;
 use clap::{Parser, ValueEnum};
 
-use crate::{variable_files::CustomVariables, content_type::ContentType};
+use crate::{content_type::ContentType, variable_files::CustomVariables};
 
 #[derive(ValueEnum, Clone, Default)]
 pub enum ResponseValidationChoice {
@@ -13,8 +13,10 @@ pub enum ResponseValidationChoice {
     /// HTTP Status Code. WARNING this will be deprecated in version 1
     Http200,
     /// Validates the result is any status code less than 400
-     NonError,
+    NonError,
     /// Validates the structure and types of the entire response
+    /// NOTE: This tool will not produce response validation for union types (nullable, oneOf, not
+    /// required, etc).
     Full,
 }
 
@@ -89,7 +91,7 @@ pub struct Cli {
     /// supported by this tool the tool will select the first scpecified content type supported by this
     /// tool. If no valid content type is found the tool will use an empty request body.
     #[arg(long, default_value_t = ContentType::default(), value_enum)]
-    content_type: ContentType
+    content_type: ContentType,
 }
 
 /// Parse a single key-value pair

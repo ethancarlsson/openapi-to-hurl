@@ -337,7 +337,7 @@ fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {
     }
 }
 
-fn single_space() -> Whitespace {
+pub fn single_space() -> Whitespace {
     Whitespace {
         value: " ".to_string(),
         source_info: empty_source_info(),
