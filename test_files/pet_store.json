@@ -218,7 +218,9 @@
         "type": "object",
         "required": [
           "id",
-          "name"
+          "name",
+          "inner",
+          "photo_urls"
         ],
         "properties": {
           "id": {
@@ -239,6 +241,21 @@
             "example": [
               "https://example.com/img.png",
               "https://example.com/img2.png"
+            ]
+          },
+          "inner": {
+            "type": "object",
+            "required": [
+              "test"
+            ],
+            "allOf": [
+              {
+                "properties": {
+                  "test": {
+                    "type": "string"
+                  }
+                }
+              }
             ]
           }
         }
