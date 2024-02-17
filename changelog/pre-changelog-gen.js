@@ -1,4 +1,3 @@
-const fs = require("node:fs");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 
@@ -27,18 +26,6 @@ exports.preTagGeneration = async function (tag) {
     console.log(`output: ${stdout}, stderr ${stderr}`);
   } catch (e) {
     console.error(`err: ${e}`);
-  }
-};
-
-exports.preVersionGeneration = function (version) {
-  try {
-    const data = fs.readFileSync("Cargo.toml", "utf8").replace(
-      /version = \"\d+.\d+.\d+\"/,
-      `version = "${version}"`,
-    );
-    fs.writeFileSync("Cargo.toml", data);
-  } catch (err) {
-    console.error(err);
   }
 };
 
