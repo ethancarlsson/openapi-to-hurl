@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use hurl_core::ast::{Assert, FilterValue, Float, PredicateValue, TemplateElement};
 use log::warn;
 use oas3::{spec::RefError, Schema, Spec};
@@ -34,6 +36,11 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                 }
             }
             None => (),
+        }
+
+        if schema.all_of.len() > 0 {
+            let combined_schema = self.build_schema_from_allof(schema)?;
+            return self.add_asserts_from_schema(combined_schema, query_value);
         }
 
         let schema_type = match schema.schema_type {
@@ -140,6 +147,27 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
             }
             None => (),
         };
+    }
+
+    fn build_schema_from_allof(&self, schema: Schema) -> Result<Schema, RefError> {
+        let mut new_schema = schema.clone();
+        let mut props = BTreeMap::new();
+
+        for schema in new_schema.all_of {
+            for prop in schema.resolve(self.spec)?.properties {
+                props.insert(prop.0, prop.1);
+            }
+        }
+
+        for prop in new_schema.properties {
+            props.insert(prop.0, prop.1);
+        }
+
+        new_schema.all_of = vec![];
+
+        new_schema.properties = props;
+
+        Ok(new_schema)
     }
 
     fn add_int_asserts(&mut self, schema: Schema, query_value: &hurl_core::ast::QueryValue) {
