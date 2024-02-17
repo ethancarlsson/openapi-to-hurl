@@ -1,3 +1,20 @@
+# [0.3.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.2...v0.3.0) (2024-02-17)
+
+
+### Bug Fixes
+
+* Fix handling of allOf in json request bodies ([e7e9e41](https://github.com/ethancarlsson/openapi-to-hurl/commit/e7e9e410eb4f5aeda4c09f737744673fc15f14c0))
+
+
+### Features
+
+* Add `non-error` validation option and deprecate `http-200` ([36c97a6](https://github.com/ethancarlsson/openapi-to-hurl/commit/36c97a678e6c75871f94abbab0f9bf426a4104c7))
+* Full validation for json schemas ([fa23083](https://github.com/ethancarlsson/openapi-to-hurl/commit/fa230838b5acb72d20d6c39ebe11e7eca71273a0))
+* Full validation for plain text ([099c08e](https://github.com/ethancarlsson/openapi-to-hurl/commit/099c08e1a8e647b3d1d6d0d7d9069922c6711ed0))
+* Validate json objects that use allOf properties ([887dfbe](https://github.com/ethancarlsson/openapi-to-hurl/commit/887dfbe1fdc2911c0c23c728d9a73cb974e6fb36))
+
+
+
 ## [0.2.2](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.1...v0.2.2) (2024-02-05)
 
 
