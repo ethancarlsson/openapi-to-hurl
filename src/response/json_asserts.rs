@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use hurl_core::ast::{Assert, FilterValue, Float, PredicateValue, TemplateElement};
-use log::warn;
+use log::{debug, warn};
 use oas3::{spec::RefError, Schema, Spec};
 use serde_json::Number;
 
@@ -57,7 +57,8 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
         };
 
         // This tool can't handle union types.
-        if schema.nullable == Some(true) || !schema.one_of.is_empty() {
+        if schema.nullable == Some(true) || !schema.one_of.is_empty() || !schema.any_of.is_empty() {
+            debug!("Schema for {} is nullable or uses oneOf/anyOf, this tool can't generate assertions for schemas with multiple possible types", schema.title.unwrap_or("".to_string()));
             return Ok(self);
         }
 
@@ -332,6 +333,8 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         expr: simple_template(format!("{path}.{}", property.0)),
                     },
                 );
+            } else {
+                debug!("Not generating asserts for property at {}. The property is not required and this tool will not generate asserts for properties with multiple possible types.", format!("{path}.{}", property.0));
             }
         }
 

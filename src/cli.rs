@@ -58,6 +58,31 @@ pub enum Formatting {
     RequestBodies,
 }
 
+#[derive(ValueEnum, Clone, Default)]
+pub enum LogLevel {
+    /// The "error" level.
+    ///
+    /// Designates very serious errors.
+    Error = 0,
+    /// The "warn" level.
+    ///
+    /// Designates hazardous situations.
+    Warn,
+    /// The "info" level.
+    ///
+    /// Designates useful information.
+    #[default]
+    Info,
+    /// The "debug" level.
+    ///
+    /// Designates lower priority information.
+    Debug,
+    /// The "trace" level.
+    ///
+    /// Designates very low priority, often extremely verbose, information.
+    Trace,
+}
+
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 pub struct Cli {
@@ -96,6 +121,11 @@ pub struct Cli {
     /// tool. If no valid content type is found the tool will use an empty request body.
     #[arg(long, default_value_t = ContentType::default(), value_enum)]
     content_type: ContentType,
+    #[arg(short = 'l', long, default_value_t = LogLevel::default(), value_enum)]
+    log_level: LogLevel,
+    /// Set this to true to silence all logging
+    #[arg(long, default_value_t = false)]
+    quiet: bool,
 }
 
 /// Parse a single key-value pair
@@ -132,6 +162,8 @@ pub struct Settings {
     pub tags: Option<Vec<String>>,
     pub formatting: Formatting,
     pub content_type: ContentType,
+    pub log_level: LogLevel,
+    pub quiet: bool,
 }
 
 impl Cli {
@@ -159,6 +191,8 @@ impl Cli {
             tags: self.tag,
             formatting: self.formatting,
             content_type: self.content_type,
+            log_level: self.log_level,
+            quiet: self.quiet,
         })
     }
 }

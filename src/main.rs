@@ -9,7 +9,7 @@ use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::Settings;
 use hurl_files::HurlFiles;
-use log::trace;
+use log::{info, trace};
 use oas3::Spec;
 
 mod cli;
@@ -21,10 +21,17 @@ mod response;
 mod variable_files;
 
 fn main() -> Result<()> {
-    env_logger::init();
-
     let cli = Cli::parse();
     let args = cli.args()?;
+
+    stderrlog::new()
+        .module(module_path!())
+        .quiet(args.quiet)
+        .verbosity(args.log_level.clone() as usize)
+        .timestamp(stderrlog::Timestamp::Off)
+        .init()
+        .unwrap();
+
     trace!("parsing oas3 from path");
     let spec =
         oas3::from_path(&args.path).with_context(|| format!("Invalid Open API 3.1 Specification. This tool only aims to support OpenAPI 3.1 and up."))?;
@@ -98,7 +105,10 @@ fn out_to_files(
         .with_context(|| format!("could not write to file at {file_path}"))?;
     }
 
-    println!("Created or updated {files_created_count} hurl files");
+    info!(
+        "Created or updated {files_created_count} hurl files in {}",
+        out_path.to_str().unwrap_or("directory")
+    );
 
     Ok(())
 }
@@ -413,15 +423,15 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                        file: "POST {{host}}/pets\n```json\n".to_string()
-                            + &serde_json::to_string_pretty(&get_add_pet_request_body()).unwrap()
-                            + "\n```\n\nHTTP *"
-                            + "\n[Asserts]"
-                            + "\n\nstatus < 400"
-                            + "\njsonpath \"$\" isCollection"
-                            + "\njsonpath \"$.id\" isInteger"
-                            + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
-                            + "\njsonpath \"$.name\" isString\njsonpath \"$.photo_urls\" isCollection",
+                file: "POST {{host}}/pets\n```json\n".to_string()
+                    + &serde_json::to_string_pretty(&get_add_pet_request_body()).unwrap()
+                    + "\n```\n\nHTTP *"
+                    + "\n[Asserts]"
+                    + "\n\nstatus < 400"
+                    + "\njsonpath \"$\" isCollection"
+                    + "\njsonpath \"$.id\" isInteger"
+                    + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
+                    + "\njsonpath \"$.name\" isString\njsonpath \"$.photo_urls\" isCollection",
                 filename: "addPet".to_string(),
             }],
         )];
@@ -551,9 +561,7 @@ mod tests {
             &Settings {
                 path: spec_path,
                 query_params_choice: crate::cli::QueryParamChoice::None,
-                tags: Some(vec![
-                    "petsRead".to_string(),
-                ]),
+                tags: Some(vec!["petsRead".to_string()]),
                 ..Settings::default()
             },
             &spec,
@@ -587,26 +595,20 @@ mod tests {
             &Settings {
                 path: spec_path,
                 query_params_choice: crate::cli::QueryParamChoice::None,
-                operation_id_selection: Some(vec![
-                    "showPetById".to_string()
-                ]),
-                tags: Some(vec![
-                    "petsRead".to_string(),
-                ]),
+                operation_id_selection: Some(vec!["showPetById".to_string()]),
+                tags: Some(vec!["petsRead".to_string()]),
                 ..Settings::default()
             },
             &spec,
         );
 
-        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
-            (
-                "_pets_{petId}".to_string(),
-                vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
-                    filename: "showPetById".to_string(),
-                }],
-            ),
-        ];
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets_{petId}".to_string(),
+            vec![HurlFileString {
+                file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                filename: "showPetById".to_string(),
+            }],
+        )];
         assert_eq!(expected, result.unwrap());
     }
 }
