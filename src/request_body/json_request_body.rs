@@ -21,6 +21,19 @@ pub fn parse_json_from_schema(
         None => (),
     }
 
+    if schema.all_of.len() > 0 {
+        return Ok(Some(json_obj_from_allof(schema, spec, settings)?));
+    }
+
+    if schema.one_of.len() > 0 {
+        return Ok(json_obj_from_anyof(schema.one_of, spec, &settings)?);
+    }
+
+    // Treat any_of and one_of the same / use only the first schema of both
+    if schema.any_of.len() > 0 {
+        return Ok(json_obj_from_anyof(schema.any_of, spec, &settings)?);
+    }
+
     let default_val = match schema.schema_type {
         Some(t) => Some(default_json_value_from_schema_type(t)),
         None => None,
@@ -61,19 +74,6 @@ pub fn parse_json_from_schema(
             };
         }
         None => {
-            if schema.all_of.len() > 0 {
-                return Ok(Some(json_obj_from_allof(schema.all_of, spec, settings)?));
-            }
-
-            if schema.one_of.len() > 0 {
-                return Ok(json_obj_from_anyof(schema.one_of, spec, &settings)?);
-            }
-
-            // Treat any_of and one_of the same / use only the first schema of both
-            if schema.any_of.len() > 0 {
-                return Ok(json_obj_from_anyof(schema.any_of, spec, &settings)?);
-            }
-
             debug!("Couldn't build anything from schema. Returning null...");
 
             Ok(Some(serde_json::Value::Null))
@@ -118,13 +118,13 @@ fn json_obj_from_anyof(
 }
 
 fn json_obj_from_allof(
-    allof: Vec<ObjectOrReference<Schema>>,
+    schema: Schema,
     spec: &Spec,
     settings: &SpecBodySettings,
 ) -> Result<serde_json::Value, RefError> {
     let mut props = Map::new();
-    for schema in allof {
-        for prop in schema.resolve(spec)?.properties {
+    for subschema in schema.all_of {
+        for prop in subschema.resolve(spec)?.properties {
             let value = parse_json_from_schema(prop.1.resolve(spec)?, spec, &settings)?;
             match value {
                 Some(v) => {
@@ -133,6 +133,16 @@ fn json_obj_from_allof(
                 None => (),
             };
         }
+    }
+
+    for prop in schema.properties {
+        let value = parse_json_from_schema(prop.1.resolve(spec)?, spec, &settings)?;
+        match value {
+            Some(v) => {
+                props.insert(prop.0, v);
+            }
+            None => (),
+        };
     }
 
     Ok(serde_json::Value::Object(props))
