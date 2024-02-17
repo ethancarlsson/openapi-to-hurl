@@ -19,9 +19,9 @@ is incomplete and in the early stages of development.
 - [x] Improve JSON formatting
     - [x] Offer unformatted JSON option
     - [x] Add new line at the end of objects and array structs
-- [ ] Implement filtering options
+- [x] Implement filtering options
     - [x] Filter by operationId
-    - [ ] Filter by tag
+    - [x] Filter by tag
 - [x] Implement output options
     - [x] To files and directories
     - [x] To console

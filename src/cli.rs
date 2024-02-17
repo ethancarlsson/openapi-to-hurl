@@ -81,6 +81,10 @@ pub struct Cli {
     /// Select an operationId from Open API Spec, can select multiple operationIds
     #[arg(short = 'i', long)]
     select_operation_id: Option<Vec<String>>,
+    /// Filter by tags in the Open API Spec, can select multiple tags. If used with the
+    /// "select-operation-id" option the request will first be narrowed by tag then by operationId
+    #[arg(short = 't', long)]
+    tag: Option<Vec<String>>,
     /// How the variables file should be updated
     #[arg(long, default_value_t = VariablesUpdateStrategy::default(), value_enum)]
     variables_update_strategy: VariablesUpdateStrategy,
@@ -125,6 +129,7 @@ pub struct Settings {
     pub custom_variables: CustomVariables,
     pub variables_update_strategy: VariablesUpdateStrategy,
     pub operation_id_selection: Option<Vec<String>>,
+    pub tags: Option<Vec<String>>,
     pub formatting: Formatting,
     pub content_type: ContentType,
 }
@@ -151,6 +156,7 @@ impl Cli {
                 headers: self.header_vars,
             },
             operation_id_selection: self.select_operation_id,
+            tags: self.tag,
             formatting: self.formatting,
             content_type: self.content_type,
         })

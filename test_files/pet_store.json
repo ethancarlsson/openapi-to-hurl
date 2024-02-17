@@ -18,7 +18,8 @@
         "summary": "List all pets",
         "operationId": "listPets",
         "tags": [
-          "pets"
+          "pets",
+          "petsRead"
         ],
         "parameters": [
           {
@@ -174,7 +175,8 @@
         "summary": "Info for a specific pet",
         "operationId": "showPetById",
         "tags": [
-          "pets"
+          "pets",
+          "petsRead"
         ],
         "parameters": [
           {

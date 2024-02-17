@@ -54,6 +54,16 @@ struct HurlFileBuilder<'a> {
     args: &'a Settings,
 }
 
+fn share_element(vec1: &Vec<String>, vec2: &Vec<String>) -> bool {
+    for item in vec1 {
+        if vec2.contains(item) {
+            return true;
+        }
+    }
+    false
+}
+
+
 impl<'a> HurlFileBuilder<'a> {
     pub fn new(path: &'a OApiPath, spec: &'a Spec, args: &'a Settings) -> HurlFileBuilder<'a> {
         Self {
@@ -71,15 +81,20 @@ impl<'a> HurlFileBuilder<'a> {
             None => return self,
         };
 
-        let should_skip = match &self.args.operation_id_selection {
-            Some(selection) => {
-                // TODO: Figure out how to avoid the clone here.
-                !selection.contains(&o.clone().operation_id.unwrap_or("no_id".to_string()))
-            }
-            None => false,
+        let is_in_tag = match &self.args.tags {
+            Some(ts) => share_element(ts, &o.tags),
+            None => true,
         };
 
-        if should_skip {
+        let is_selected_operation_id = match &self.args.operation_id_selection {
+            Some(selection) => {
+                // TODO: Figure out how to avoid the clone here.
+                selection.contains(&o.clone().operation_id.unwrap_or("no_id".to_string()))
+            }
+            None => true,
+        };
+
+        if !(is_in_tag && is_selected_operation_id) {
             return self;
         }
 

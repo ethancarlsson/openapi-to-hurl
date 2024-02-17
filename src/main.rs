@@ -541,4 +541,72 @@ mod tests {
         ];
         assert_eq!(expected, result.unwrap());
     }
+
+    #[test]
+    fn hurl_files_from_spec_using_tag_filter_returns_only_those_in_tag() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                tags: Some(vec![
+                    "petsRead".to_string(),
+                ]),
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
+            (
+                "_pets".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                    filename: "listPets".to_string(),
+                }],
+            ),
+            (
+                "_pets_{petId}".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    filename: "showPetById".to_string(),
+                }],
+            ),
+        ];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_using_tag_and_oid_filter_returns_only_those_in_tag_and_operation_id() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec![
+                    "showPetById".to_string()
+                ]),
+                tags: Some(vec![
+                    "petsRead".to_string(),
+                ]),
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![
+            (
+                "_pets_{petId}".to_string(),
+                vec![HurlFileString {
+                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    filename: "showPetById".to_string(),
+                }],
+            ),
+        ];
+        assert_eq!(expected, result.unwrap());
+    }
 }
