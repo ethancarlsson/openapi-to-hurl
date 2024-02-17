@@ -18,7 +18,6 @@ mod custom_hurl_ast;
 mod hurl_files;
 mod request_body;
 mod response;
-pub mod schema;
 mod variable_files;
 
 fn main() -> Result<()> {

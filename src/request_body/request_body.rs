@@ -2,7 +2,7 @@ use super::json_request_body::parse_json_from_schema;
 use crate::{
     cli::{Formatting, Settings},
     content_type::ContentType,
-    custom_hurl_ast::{empty_source_info, empty_space, newline}, schema::schema::parse_schema,
+    custom_hurl_ast::{empty_source_info, empty_space, newline},
 };
 use anyhow::Context;
 use hurl_core::ast::{Body, MultilineString, TemplateElement};
@@ -54,8 +54,8 @@ pub fn from_spec_body(
         },
     };
 
-    let schema = match parse_schema(content.1.schema.clone(), spec)? {
-        Some(s) => s,
+    let schema = match &content.1.schema {
+        Some(s) => s.resolve(spec)?,
         None => return Ok(None),
     };
 

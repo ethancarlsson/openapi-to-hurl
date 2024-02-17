@@ -13,7 +13,6 @@ use oas3::{
 use crate::{
     content_type::ContentType,
     custom_hurl_ast::{empty_source_info, empty_space, newline},
-    schema::schema::parse_schema,
 };
 
 pub fn validate_response_not_error() -> Response {
@@ -77,8 +76,8 @@ pub fn validation_response_full(
         }
     };
 
-    let schema = match parse_schema(content.1.schema.clone(), spec)? {
-        Some(s) => s,
+    let schema = match &content.1.schema {
+        Some(s) => s.resolve(spec)?,
         None => return Ok(None),
     };
 
