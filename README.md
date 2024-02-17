@@ -8,8 +8,9 @@ is incomplete and in the early stages of development.
     - [x] No validation
     - [x] Response code validation
     - [ ] Full response validation
-        - [ ] Plain Text
-        - [ ] JSON
+        - [x] Plain Text
+        - [x] JSON
+        - [ ] XML
 - [ ] Support for request/response formats
     - [x] JSON
     - [ ] XML
@@ -30,5 +31,5 @@ is incomplete and in the early stages of development.
     - [x] Setup CI/CD for changelog and versioning
     - [ ] Trigger release to cargo on version bump
 - [ ] Refactor
-    - [ ] Make add options to have this work like a true unix tool that takes
+    - [ ] Add options to have this work like a true unix tool that takes
         text as input and outputs text
