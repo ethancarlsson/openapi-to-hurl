@@ -1,3 +1,4 @@
+use super::json_asserts::parse_json_response_body_asserts;
 use crate::response::common_asserts::{assert_status_less_than, parse_string_asserts};
 use std::vec;
 
@@ -29,8 +30,6 @@ pub fn validate_response_not_error() -> Response {
     }])
 }
 
-use super::json_asserts::parse_json_response_body_asserts;
-
 pub fn validation_response_full(
     operation: &Operation,
     spec: &Spec,
@@ -41,8 +40,8 @@ pub fn validation_response_full(
         .clone()
         .unwrap_or("operationWithNoId".to_string());
 
-    let response = match operation.responses(spec).iter().find(|kv| kv.0 == "200") {
-        Some(r) => r.1.clone(),
+    let response = match operation.responses.iter().find(|kv| kv.0 == "200") {
+        Some(r) => r.1.resolve(spec)?,
         None => return Ok(Some(validate_response_not_error())),
     };
 
@@ -62,7 +61,7 @@ pub fn validation_response_full(
                 backup_content
             }
             None => {
-                warn!("operation {operation_id} does not have any of the supported content types ({}). Defaulting to an empty request body", ContentType::supported_types().join(", "));
+                warn!("operation {operation_id} does not have any of the supported content types ({}). Defaulting to an empty response body", ContentType::supported_types().join(", "));
                 return Ok(None);
             }
         },

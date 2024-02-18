@@ -7,14 +7,16 @@ use std::{
 use crate::cli::Cli;
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use cli::Settings;
+use cli::{ErrorHandling, Settings};
+use errors::OperationError;
 use hurl_files::HurlFiles;
-use log::{info, trace};
+use log::{error, info, trace};
 use oas3::Spec;
 
 mod cli;
 mod content_type;
 mod custom_hurl_ast;
+mod errors;
 mod hurl_files;
 mod request_body;
 mod response;
@@ -119,6 +121,30 @@ pub struct HurlFileString {
     pub file: String,
 }
 
+fn handle_errors(
+    errors: Vec<OperationError>,
+    error_handling: &ErrorHandling,
+) -> Result<(), anyhow::Error> {
+    match error_handling {
+        ErrorHandling::Log => {
+            for err in errors {
+                error!("{}", err);
+            }
+            Ok(())
+        }
+        ErrorHandling::Terminate => {
+            bail!(
+                "Found errors while parsing openapi file:\n\n{}",
+                errors
+                    .iter()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            );
+        }
+    }
+}
+
 fn hurl_files_from_spec_path(
     args: &Settings,
     spec: &Spec,
@@ -128,15 +154,7 @@ fn hurl_files_from_spec_path(
         let hurl_files = HurlFiles::from_oai_path(path, &spec, &args);
 
         if hurl_files.errors.len() > 0 {
-            bail!(
-                "Found errors while parsing openapi file:\n\n{}",
-                hurl_files
-                    .errors
-                    .iter()
-                    .map(|e| e.to_string())
-                    .collect::<Vec<String>>()
-                    .join("\n")
-            )
+            handle_errors(hurl_files.errors, &args.error_handling)?
         }
 
         if hurl_files.hurl_files.len() > 0 {

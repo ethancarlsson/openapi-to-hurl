@@ -1,13 +1,18 @@
 use crate::{
+    cli::{
+        ErrorHandling::{Log, Terminate},
+        ResponseValidationChoice,
+    },
     custom_hurl_ast::{empty_source_info, empty_space, newline},
+    errors::OperationError,
     request_body::request_body::SpecBodySettings,
-    response::response_validation::{validate_response_not_error, validation_response_full}
+    response::response_validation::{validate_response_not_error, validation_response_full},
 };
 use hurl_core::ast::{
     Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
     TemplateElement, Version, VersionValue, Whitespace,
 };
-use log::{trace, warn};
+use log::{error, trace, warn};
 use oas3::{
     spec::{
         FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, RequestBody,
@@ -23,7 +28,7 @@ type OApiPath<'a> = (&'a String, &'a PathItem);
 
 pub struct HurlFiles {
     pub hurl_files: Vec<LocalHurlFile>,
-    pub errors: Vec<RefError>,
+    pub errors: Vec<OperationError>,
 }
 
 pub struct LocalHurlFile {
@@ -48,7 +53,7 @@ impl HurlFiles {
 
 struct HurlFileBuilder<'a> {
     hurl_files: Vec<LocalHurlFile>,
-    errors: Vec<RefError>,
+    errors: Vec<OperationError>,
     path: &'a OApiPath<'a>,
     spec: &'a Spec,
     args: &'a Settings,
@@ -62,7 +67,6 @@ fn share_element(vec1: &Vec<String>, vec2: &Vec<String>) -> bool {
     }
     false
 }
-
 
 impl<'a> HurlFileBuilder<'a> {
     pub fn new(path: &'a OApiPath, spec: &'a Spec, args: &'a Settings) -> HurlFileBuilder<'a> {
@@ -88,7 +92,6 @@ impl<'a> HurlFileBuilder<'a> {
 
         let is_selected_operation_id = match &self.args.operation_id_selection {
             Some(selection) => {
-                // TODO: Figure out how to avoid the clone here.
                 selection.contains(&o.clone().operation_id.unwrap_or("no_id".to_string()))
             }
             None => true,
@@ -124,25 +127,26 @@ fn to_file(
     operation: &Operation,
     method: &HttpMethod,
     settings: &Settings,
-) -> Result<HurlFile, Vec<RefError>> {
+) -> Result<HurlFile, Vec<OperationError>> {
     let param_result_iter = operation.parameters.iter().map(|p| match p {
         ObjectOrReference::Object(p) => Ok(p.clone()),
         ObjectOrReference::Ref { ref_path } => Parameter::from_ref(&spec, &ref_path),
     });
 
+    let opertation_id = operation.operation_id.clone();
     let mut errors = param_result_iter
         .clone()
         .filter_map(|p| match p {
             Ok(_) => None,
-            Err(e) => Some(e),
+            Err(e) => Some(OperationError::Ref(opertation_id.clone(), e)),
         })
-        .collect::<Vec<RefError>>();
+        .collect::<Vec<OperationError>>();
 
     let request_body =
         match parse_request_body(operation, spec, SpecBodySettings::from_settings(settings)) {
             Ok(r) => r,
             Err(e) => {
-                errors.push(e);
+                errors.push(OperationError::Ref(opertation_id.clone(), e));
                 return Err(errors);
             }
         };
@@ -262,15 +266,23 @@ fn to_file(
             source_info: empty_source_info(),
         },
         response: match settings.validate_response {
-            crate::cli::ResponseValidationChoice::No => None,
-            crate::cli::ResponseValidationChoice::Http200 => {
+            ResponseValidationChoice::No => None,
+            ResponseValidationChoice::Http200 => {
                 warn!("Using deprecated option `--validate-response http-200`");
                 Some(status_code_200_response())
-            },
-            crate::cli::ResponseValidationChoice::NonError => Some(validate_response_not_error()),
-            crate::cli::ResponseValidationChoice::Full => match validation_response_full(operation, spec, &settings.content_type) {
-                Ok(response) => response,
-                Err(_) => todo!(),
+            }
+            ResponseValidationChoice::NonError => Some(validate_response_not_error()),
+            ResponseValidationChoice::Full => {
+                match validation_response_full(operation, spec, &settings.content_type) {
+                    Ok(response) => response,
+                    Err(e) => {
+                        match settings.error_handling {
+                            Log => error!("{}", OperationError::Ref(opertation_id, e)),
+                            Terminate => return Err(vec![OperationError::Ref(opertation_id, e)]),
+                        };
+                        None
+                    }
+                }
             }
         },
     };

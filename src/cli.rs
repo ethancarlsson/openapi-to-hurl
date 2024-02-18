@@ -83,6 +83,17 @@ pub enum LogLevel {
     Trace,
 }
 
+#[derive(ValueEnum, Clone, Default)]
+pub enum ErrorHandling {
+    /// Log the error to stderr but continue processing. Note that the program will
+    /// still terminate if the error is unrecoverable, e.g. the input isn't a valid
+    /// Open API Specification.
+    Log,
+    /// Terminate the program on any errors found with the specification.
+    #[default]
+    Terminate,
+}
+
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 pub struct Cli {
@@ -126,6 +137,9 @@ pub struct Cli {
     /// Set this to true to silence all logging
     #[arg(long, default_value_t = false)]
     quiet: bool,
+    /// Set to `log` to log errors and keep generating hurl files where possible.
+    #[arg(long, default_value_t = ErrorHandling::default(), value_enum)]
+    handle_errors: ErrorHandling,
 }
 
 /// Parse a single key-value pair
@@ -164,6 +178,7 @@ pub struct Settings {
     pub content_type: ContentType,
     pub log_level: LogLevel,
     pub quiet: bool,
+    pub error_handling: ErrorHandling,
 }
 
 impl Cli {
@@ -193,6 +208,7 @@ impl Cli {
             content_type: self.content_type,
             log_level: self.log_level,
             quiet: self.quiet,
+            error_handling: self.handle_errors,
         })
     }
 }
