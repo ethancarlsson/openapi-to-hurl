@@ -52,7 +52,7 @@ jobs:
       - name: Run conventional commits
         uses: TriPSs/conventional-changelog-action@v3
         with:
-          version-file: "Cargo.toml"
+          version-file: "./Cargo.toml"
           github-token: ${{ secrets.GH_TOKEN }}
           pre-changelog-generation: changelog/pre-changelog-gen.js
 
