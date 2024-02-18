@@ -16,6 +16,11 @@ use crate::{
     custom_hurl_ast::{empty_source_info, empty_space, newline},
 };
 
+pub enum HandleUnionsBy {
+    IgnoringThem,
+    TreatingOptionalsAsRequired,
+}
+
 pub fn validate_response_not_error() -> Response {
     response_structure(vec![Section {
         line_terminators: vec![],
@@ -34,6 +39,7 @@ pub fn validation_response_full(
     operation: &Operation,
     spec: &Spec,
     content_type: &ContentType,
+    handle_unions_by: HandleUnionsBy,
 ) -> Result<Option<Response>, RefError> {
     let operation_id = operation
         .operation_id
@@ -93,7 +99,7 @@ pub fn validation_response_full(
             space0: empty_space(),
             line_terminator0: newline(),
             value: hurl_core::ast::SectionValue::Asserts(parse_json_response_body_asserts(
-                schema, &spec,
+                schema, &spec, handle_unions_by
             )?),
             source_info: empty_source_info(),
         }]))),

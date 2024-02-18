@@ -6,7 +6,7 @@ use crate::{
     custom_hurl_ast::{empty_source_info, empty_space, newline},
     errors::OperationError,
     request_body::request_body::SpecBodySettings,
-    response::response_validation::{validate_response_not_error, validation_response_full},
+    response::response_validation::{validate_response_not_error, validation_response_full, HandleUnionsBy},
 };
 use hurl_core::ast::{
     Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
@@ -273,7 +273,19 @@ fn to_file(
             }
             ResponseValidationChoice::NonError => Some(validate_response_not_error()),
             ResponseValidationChoice::Full => {
-                match validation_response_full(operation, spec, &settings.content_type) {
+                match validation_response_full(operation, spec, &settings.content_type, HandleUnionsBy::IgnoringThem) {
+                    Ok(response) => response,
+                    Err(e) => {
+                        match settings.error_handling {
+                            Log => error!("{}", OperationError::Ref(opertation_id, e)),
+                            Terminate => return Err(vec![OperationError::Ref(opertation_id, e)]),
+                        };
+                        None
+                    }
+                }
+            }
+            ResponseValidationChoice::FullWithOptionals => {
+                match validation_response_full(operation, spec, &settings.content_type, HandleUnionsBy::TreatingOptionalsAsRequired) {
                     Ok(response) => response,
                     Err(e) => {
                         match settings.error_handling {

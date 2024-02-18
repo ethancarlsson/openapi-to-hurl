@@ -457,6 +457,42 @@ mod tests {
     }
 
     #[test]
+    fn hurl_files_from_spec_path_with_json_and_full_with_optional_validation() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                path: spec_path,
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["addPet".to_string()]),
+                content_type: ContentType::Json,
+                validate_response: ResponseValidationChoice::FullWithOptionals,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets".to_string(),
+            vec![HurlFileString {
+                file: "POST {{host}}/pets\n```json\n".to_string()
+                    + &serde_json::to_string_pretty(&get_add_pet_request_body()).unwrap()
+                    + "\n```\n\nHTTP *"
+                    + "\n[Asserts]"
+                    + "\n\nstatus < 400"
+                    + "\njsonpath \"$\" isCollection"
+                    + "\njsonpath \"$.id\" isInteger"
+                    + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
+                    + "\njsonpath \"$.name\" isString\njsonpath \"$.photo_urls\" isCollection"
+                    + "\njsonpath \"$.tag\" isString",
+                filename: "addPet".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
     fn hurl_files_from_spec_path_with_plain_text_option_but_no_plain_text_in_schema_selects_first_valid(
     ) {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();

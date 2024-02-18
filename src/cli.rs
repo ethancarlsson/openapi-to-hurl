@@ -18,6 +18,9 @@ pub enum ResponseValidationChoice {
     /// NOTE: This tool will not produce response validation for union types (nullable, oneOf, not
     /// required, etc).
     Full,
+    /// Validates the full strucure and treats all properties in the response body
+    /// as if they are required.
+    FullWithOptionals,
 }
 
 #[derive(ValueEnum, Clone, Default)]

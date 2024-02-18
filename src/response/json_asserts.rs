@@ -10,18 +10,30 @@ use crate::{
     response::common_asserts::assert_query_matches_predicate,
 };
 
-use super::common_asserts::{
-    assert_query_matches_predicate_with_filters, assert_status_less_than, parse_string_asserts,
+use super::{
+    common_asserts::{
+        assert_query_matches_predicate_with_filters, assert_status_less_than, parse_string_asserts,
+    },
+    response_validation::HandleUnionsBy,
 };
 
 pub struct SchemaToJsonAssertBuilder<'a> {
     asserts: &'a mut Vec<Assert>,
     spec: &'a Spec,
+    handle_unions_by: &'a HandleUnionsBy,
 }
 
 impl<'a> SchemaToJsonAssertBuilder<'a> {
-    fn new(asserts: &'a mut Vec<Assert>, spec: &'a Spec) -> Self {
-        Self { asserts, spec }
+    fn new(
+        asserts: &'a mut Vec<Assert>,
+        spec: &'a Spec,
+        handle_unions_by: &'a HandleUnionsBy,
+    ) -> Self {
+        Self {
+            asserts,
+            spec,
+            handle_unions_by,
+        }
     }
 
     fn add_asserts_from_schema(
@@ -58,7 +70,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
 
         // This tool can't handle union types.
         if schema.nullable == Some(true) || !schema.one_of.is_empty() || !schema.any_of.is_empty() {
-            debug!("Schema for {} is nullable or uses oneOf/anyOf, this tool can't generate assertions for schemas with multiple possible types", schema.title.unwrap_or("".to_string()));
+            debug!("Schema {} is nullable or uses oneOf/anyOf, this tool can't generate assertions for schemas with multiple possible types", schema.title.unwrap_or("".to_string()));
             return Ok(self);
         }
 
@@ -325,16 +337,29 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
         };
 
         for property in schema.properties {
-            if schema.required.contains(&property.0) {
-                let _ = self.add_asserts_from_schema(
-                    property.1.resolve(self.spec)?,
-                    &hurl_core::ast::QueryValue::Jsonpath {
-                        space0: single_space(),
-                        expr: simple_template(format!("{path}.{}", property.0)),
-                    },
-                );
-            } else {
-                debug!("Not generating asserts for property at {}. The property is not required and this tool will not generate asserts for properties with multiple possible types.", format!("{path}.{}", property.0));
+            match self.handle_unions_by {
+                HandleUnionsBy::IgnoringThem => {
+                    if schema.required.contains(&property.0) {
+                        let _ = self.add_asserts_from_schema(
+                            property.1.resolve(self.spec)?,
+                            &hurl_core::ast::QueryValue::Jsonpath {
+                                space0: single_space(),
+                                expr: simple_template(format!("{path}.{}", property.0)),
+                            },
+                        );
+                    } else {
+                        debug!("Not generating asserts for property at {}. The property is not required to generate asserts for optional properties use the option `--validation-response full-with-optionals`", format!("{path}.{}", property.0));
+                    }
+                }
+                HandleUnionsBy::TreatingOptionalsAsRequired => {
+                    let _ = self.add_asserts_from_schema(
+                        property.1.resolve(self.spec)?,
+                        &hurl_core::ast::QueryValue::Jsonpath {
+                            space0: single_space(),
+                            expr: simple_template(format!("{path}.{}", property.0)),
+                        },
+                    );
+                }
             }
         }
 
@@ -367,18 +392,21 @@ fn predicate_integer_number(n: Number) -> PredicateValue {
 pub fn parse_json_response_body_asserts(
     schema: Schema,
     spec: &Spec,
+    handle_unions_by: HandleUnionsBy,
 ) -> Result<Vec<Assert>, RefError> {
-    Ok(
-        SchemaToJsonAssertBuilder::new(&mut vec![assert_status_less_than(400)], spec)
-            .add_asserts_from_schema(
-                schema,
-                &hurl_core::ast::QueryValue::Jsonpath {
-                    space0: single_space(),
-                    expr: simple_template("$".to_string()),
-                },
-            )?
-            .get_asserts(),
+    Ok(SchemaToJsonAssertBuilder::new(
+        &mut vec![assert_status_less_than(400)],
+        spec,
+        &handle_unions_by,
     )
+    .add_asserts_from_schema(
+        schema,
+        &hurl_core::ast::QueryValue::Jsonpath {
+            space0: single_space(),
+            expr: simple_template("$".to_string()),
+        },
+    )?
+    .get_asserts())
 }
 
 #[cfg(test)]
@@ -395,6 +423,7 @@ mod tests {
         response::{
             common_asserts::{assert_query_matches_predicate, assert_status_less_than},
             json_asserts::simple_template,
+            response_validation::HandleUnionsBy,
         },
     };
 
@@ -404,7 +433,11 @@ mod tests {
     fn parse_json_response_body_with_no_schema_type_returns_empty_asserts() {
         let mut schema = Schema::default();
         schema.schema_type = None;
-        let result = parse_json_response_body_asserts(schema, &Spec::default());
+        let result = parse_json_response_body_asserts(
+            schema,
+            &Spec::default(),
+            HandleUnionsBy::IgnoringThem,
+        );
         let expected: Vec<Assert> = vec![assert_status_less_than(400)];
 
         assert_eq!(Ok(expected), result);
@@ -414,7 +447,11 @@ mod tests {
     fn parse_json_response_body_with_bool_schema_type_returns_bool_asserts() {
         let mut schema = Schema::default();
         schema.schema_type = Some(oas3::spec::SchemaType::Boolean);
-        let result = parse_json_response_body_asserts(schema, &Spec::default());
+        let result = parse_json_response_body_asserts(
+            schema,
+            &Spec::default(),
+            HandleUnionsBy::IgnoringThem,
+        );
 
         let expected: Vec<Assert> = vec![
             assert_status_less_than(400),
@@ -441,7 +478,11 @@ mod tests {
         schema.minimum = Some(Number::from_f64(1.0).unwrap());
         schema.exclusive_minimum = Some(false);
 
-        let result = parse_json_response_body_asserts(schema, &Spec::default());
+        let result = parse_json_response_body_asserts(
+            schema,
+            &Spec::default(),
+            HandleUnionsBy::IgnoringThem,
+        );
 
         let expected: Vec<Assert> = vec![
             assert_status_less_than(400),
@@ -496,7 +537,11 @@ mod tests {
         schema.minimum = Some(Number::from_str("1").unwrap());
         schema.exclusive_minimum = Some(false);
 
-        let result = parse_json_response_body_asserts(schema, &Spec::default());
+        let result = parse_json_response_body_asserts(
+            schema,
+            &Spec::default(),
+            HandleUnionsBy::IgnoringThem,
+        );
 
         let expected: Vec<Assert> = vec![
             assert_status_less_than(400),
