@@ -1,4 +1,7 @@
-use crate::variable_files::{VariableFile, VariableFiles};
+use crate::{
+    settings::Settings,
+    variable_files::{VariableFile, VariableFiles},
+};
 use std::{
     fs::{self, File},
     io::Write,
@@ -7,7 +10,7 @@ use std::{
 use crate::cli::Cli;
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use cli::{ErrorHandling, Settings};
+use cli::ErrorHandling;
 use errors::OperationError;
 use hurl_files::HurlFiles;
 use log::{error, info, trace};
@@ -20,11 +23,12 @@ mod errors;
 mod hurl_files;
 mod request_body;
 mod response;
+mod settings;
 mod variable_files;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let args = cli.args()?;
+    let args: Settings = cli.try_into()?;
 
     stderrlog::new()
         .module(module_path!())
@@ -45,8 +49,10 @@ fn main() -> Result<()> {
 
     trace!("returning values out");
     match args.out {
-        cli::OutStrategy::Console => out_to_console(hurl_files)?,
-        cli::OutStrategy::Files(out_path) => out_to_files(hurl_files, variable_files, out_path)?,
+        settings::OutStrategy::Console => out_to_console(hurl_files)?,
+        settings::OutStrategy::Files(out_path) => {
+            out_to_files(hurl_files, variable_files, out_path)?
+        }
     };
 
     Ok(())
@@ -177,12 +183,13 @@ fn hurl_files_from_spec_path(
 
 #[cfg(test)]
 mod tests {
+    use crate::Settings;
     use pretty_assertions::assert_eq;
     use serde_json::json;
     use std::{path::PathBuf, str::FromStr};
 
     use crate::{
-        cli::{Formatting, QueryParamChoice, ResponseValidationChoice, Settings},
+        cli::{Formatting, QueryParamChoice, ResponseValidationChoice},
         content_type::ContentType,
         hurl_files_from_spec_path,
         variable_files::CustomVariables,

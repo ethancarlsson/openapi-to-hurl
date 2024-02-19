@@ -1,9 +1,6 @@
 use std::error::Error;
 
-use anyhow::anyhow;
 use clap::{Parser, ValueEnum};
-
-use crate::{content_type::ContentType, variable_files::CustomVariables};
 
 #[derive(ValueEnum, Clone, Default)]
 pub enum ResponseValidationChoice {
@@ -86,6 +83,14 @@ pub enum LogLevel {
     Trace,
 }
 
+
+#[derive(ValueEnum, Clone, Default)]
+pub enum CliContentType {
+    Text,
+    #[default]
+    Json,
+}
+
 #[derive(ValueEnum, Clone, Default)]
 pub enum ErrorHandling {
     /// Log the error to stderr but continue processing. Note that the program will
@@ -97,52 +102,52 @@ pub enum ErrorHandling {
     Terminate,
 }
 
-/// Search for a pattern in a file and display the lines that contain it.
+/// Generate hurl files from an Open API 3 specification
 #[derive(Parser)]
 pub struct Cli {
     /// Where will the output go
     #[arg(long, default_value_t = OutputTo::default(), value_enum)]
-    output_to: OutputTo,
+    pub output_to: OutputTo,
     /// The path to the openapi specification
-    path: std::path::PathBuf,
+    pub path: std::path::PathBuf,
     /// Directory where the hurl files will be created
-    out: Option<std::path::PathBuf>,
+    pub out: Option<std::path::PathBuf>,
     /// Response validation
     #[arg(short = 'r', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
-    validate_response: ResponseValidationChoice,
+    pub validate_response: ResponseValidationChoice,
     /// Input: `HEADER_KEY=HEADER_VALUE`. Custom headers will be added to each request as `HEADER_KEY: {{HEADER_KEY}}`
     /// and to the variables file as `HEADER_KEY=HEADER_VALUE`
     #[arg(long, value_parser = parse_key_val::<String, String>)]
-    header_vars: Vec<(String, String)>,
+    pub header_vars: Vec<(String, String)>,
     /// Lets you choose whether, and how to, pass query params
     #[arg(short = 'q', long, default_value_t = QueryParamChoice::default(), value_enum)]
-    query_params: QueryParamChoice,
+    pub query_params: QueryParamChoice,
     /// Select an operationId from Open API Spec, can select multiple operationIds
     #[arg(short = 'i', long)]
-    select_operation_id: Option<Vec<String>>,
+    pub select_operation_id: Option<Vec<String>>,
     /// Filter by tags in the Open API Spec, can select multiple tags. If used with the
     /// "select-operation-id" option the request will first be narrowed by tag then by operationId
     #[arg(short = 't', long)]
-    tag: Option<Vec<String>>,
+    pub tag: Option<Vec<String>>,
     /// How the variables file should be updated
     #[arg(long, default_value_t = VariablesUpdateStrategy::default(), value_enum)]
-    variables_update_strategy: VariablesUpdateStrategy,
+    pub variables_update_strategy: VariablesUpdateStrategy,
     /// How the output should be formatted
     #[arg(long, default_value_t = Formatting::default(), value_enum)]
-    formatting: Formatting,
+    pub formatting: Formatting,
     /// Content type of the request. If the selected content type is not available in the schema or not
     /// supported by this tool the tool will select the first scpecified content type supported by this
     /// tool. If no valid content type is found the tool will use an empty request body.
-    #[arg(long, default_value_t = ContentType::default(), value_enum)]
-    content_type: ContentType,
+    #[arg(long, default_value_t = CliContentType::default(), value_enum)]
+    pub content_type: CliContentType,
     #[arg(short = 'l', long, default_value_t = LogLevel::default(), value_enum)]
-    log_level: LogLevel,
+    pub log_level: LogLevel,
     /// Set this to true to silence all logging
     #[arg(long, default_value_t = false)]
-    quiet: bool,
+    pub quiet: bool,
     /// Set to `log` to log errors and keep generating hurl files where possible.
     #[arg(long, default_value_t = ErrorHandling::default(), value_enum)]
-    handle_errors: ErrorHandling,
+    pub handle_errors: ErrorHandling,
 }
 
 /// Parse a single key-value pair
@@ -159,59 +164,3 @@ where
     Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
 }
 
-#[derive(Default)]
-pub enum OutStrategy {
-    // Default here for convenience in unit tests, real default is files.
-    #[default]
-    Console,
-    Files(std::path::PathBuf),
-}
-
-#[derive(Default)]
-pub struct Settings {
-    pub path: std::path::PathBuf,
-    pub out: OutStrategy,
-    pub validate_response: ResponseValidationChoice,
-    pub query_params_choice: QueryParamChoice,
-    pub custom_variables: CustomVariables,
-    pub variables_update_strategy: VariablesUpdateStrategy,
-    pub operation_id_selection: Option<Vec<String>>,
-    pub tags: Option<Vec<String>>,
-    pub formatting: Formatting,
-    pub content_type: ContentType,
-    pub log_level: LogLevel,
-    pub quiet: bool,
-    pub error_handling: ErrorHandling,
-}
-
-impl Cli {
-    pub fn args(self) -> Result<Settings, anyhow::Error> {
-        Ok(Settings {
-            path: self.path,
-            out: match self.output_to {
-                OutputTo::Console => OutStrategy::Console,
-                OutputTo::Files => OutStrategy::Files(match self.out {
-                    Some(f) => f,
-                    None => {
-                        return Err(anyhow!(
-                            "Option `out` is required if `--output_to files` option is selected"
-                        ))
-                    }
-                }),
-            },
-            validate_response: self.validate_response,
-            query_params_choice: self.query_params,
-            variables_update_strategy: self.variables_update_strategy,
-            custom_variables: CustomVariables {
-                headers: self.header_vars,
-            },
-            operation_id_selection: self.select_operation_id,
-            tags: self.tag,
-            formatting: self.formatting,
-            content_type: self.content_type,
-            log_level: self.log_level,
-            quiet: self.quiet,
-            error_handling: self.handle_errors,
-        })
-    }
-}

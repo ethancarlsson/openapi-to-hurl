@@ -1,0 +1,139 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH openapi-to-hurl 1  "openapi-to-hurl " 
+.SH NAME
+openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
+.SH SYNOPSIS
+\fBopenapi\-to\-hurl\fR [\fB\-\-output\-to\fR] [\fB\-r\fR|\fB\-\-validate\-response\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] <\fIPATH\fR> [\fIOUT\fR] 
+.SH DESCRIPTION
+Generate hurl files from an Open API 3 specification
+.SH OPTIONS
+.TP
+\fB\-\-output\-to\fR=\fIOUTPUT_TO\fR [default: files]
+Where will the output go
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+console: If console is selected prints all hurl files to console. NOTE: Does not print variables to console
+.IP \(bu 2
+files: If file is selected "out" is required. NOTE: A variables file will also be created
+.RE
+.TP
+\fB\-r\fR, \fB\-\-validate\-response\fR=\fIVALIDATE_RESPONSE\fR [default: http200]
+Response validation
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+no: No Validation
+.IP \(bu 2
+http200: HTTP Status Code. WARNING this will be deprecated in version 1
+.IP \(bu 2
+non\-error: Validates the result is any status code less than 400
+.IP \(bu 2
+full: Validates the structure and types of the entire response NOTE: This tool will not produce response validation for union types (nullable, oneOf, not required, etc)
+.IP \(bu 2
+full\-with\-optionals: Validates the full strucure and treats all properties in the response body as if they are required
+.RE
+.TP
+\fB\-\-header\-vars\fR=\fIHEADER_VARS\fR
+Input: `HEADER_KEY=HEADER_VALUE`. Custom headers will be added to each request as `HEADER_KEY: {{HEADER_KEY}}` and to the variables file as `HEADER_KEY=HEADER_VALUE`
+.TP
+\fB\-q\fR, \fB\-\-query\-params\fR=\fIQUERY_PARAMS\fR [default: defaults]
+Lets you choose whether, and how to, pass query params
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+none: No query params
+.IP \(bu 2
+defaults: Default values based on types
+.RE
+.TP
+\fB\-i\fR, \fB\-\-select\-operation\-id\fR=\fISELECT_OPERATION_ID\fR
+Select an operationId from Open API Spec, can select multiple operationIds
+.TP
+\fB\-t\fR, \fB\-\-tag\fR=\fITAG\fR
+Filter by tags in the Open API Spec, can select multiple tags. If used with the "select\-operation\-id" option the request will first be narrowed by tag then by operationId
+.TP
+\fB\-\-variables\-update\-strategy\fR=\fIVARIABLES_UPDATE_STRATEGY\fR [default: merge]
+How the variables file should be updated
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+overwrite: Overwrites the entire variables file with new variables
+.IP \(bu 2
+merge: Merges new variables with old variables
+.RE
+.TP
+\fB\-\-formatting\fR=\fIFORMATTING\fR [default: request\-bodies]
+How the output should be formatted
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+no\-formatting: Will not add any characters to the output that do not affect syntax
+.IP \(bu 2
+request\-bodies: Will add some formatting to the request body
+.RE
+.TP
+\fB\-\-content\-type\fR=\fICONTENT_TYPE\fR [default: json]
+Content type of the request. If the selected content type is not available in the schema or not supported by this tool the tool will select the first scpecified content type supported by this tool. If no valid content type is found the tool will use an empty request body
+.br
+
+.br
+[\fIpossible values: \fRtext, json]
+.TP
+\fB\-l\fR, \fB\-\-log\-level\fR=\fILOG_LEVEL\fR [default: info]
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+error: The "error" level
+.IP \(bu 2
+warn: The "warn" level
+.IP \(bu 2
+info: The "info" level
+.IP \(bu 2
+debug: The "debug" level
+.IP \(bu 2
+trace: The "trace" level
+.RE
+.TP
+\fB\-\-quiet\fR
+Set this to true to silence all logging
+.TP
+\fB\-\-handle\-errors\fR=\fIHANDLE_ERRORS\fR [default: terminate]
+Set to `log` to log errors and keep generating hurl files where possible
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+log: Log the error to stderr but continue processing. Note that the program will still terminate if the error is unrecoverable, e.g. the input isn\*(Aqt a valid Open API Specification
+.IP \(bu 2
+terminate: Terminate the program on any errors found with the specification
+.RE
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help (see a summary with \*(Aq\-h\*(Aq)
+.TP
+<\fIPATH\fR>
+The path to the openapi specification
+.TP
+[\fIOUT\fR]
+Directory where the hurl files will be created

@@ -1,7 +1,8 @@
 use super::json_request_body::parse_json_from_schema;
+use crate::content_type::ContentType;
+use crate::Settings;
 use crate::{
-    cli::{Formatting, Settings},
-    content_type::ContentType,
+    cli::Formatting,
     custom_hurl_ast::{empty_source_info, empty_space, newline},
 };
 use anyhow::Context;

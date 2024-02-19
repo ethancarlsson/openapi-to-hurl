@@ -8,7 +8,7 @@ use crate::{
     request_body::request_body::SpecBodySettings,
     response::response_validation::{
         validate_response_not_error, validation_response_full, HandleUnionsBy,
-    },
+    }, settings::Settings,
 };
 use hurl_core::ast::{
     Body, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template, TemplateElement,
@@ -23,7 +23,6 @@ use oas3::{
     Schema, Spec,
 };
 
-use crate::cli::Settings;
 use crate::request_body;
 
 type OApiPath<'a> = (&'a String, &'a PathItem);

@@ -1,15 +1,23 @@
-use clap::ValueEnum;
+use crate::cli::CliContentType;
 
 const PLAIN_TEXT: &str = "text";
 const JSON: &str = "json";
 
-#[derive(ValueEnum, Clone, Default)]
+#[derive(Clone, Default)]
 pub enum ContentType {
     Text,
     #[default]
     Json,
 }
 
+impl From<CliContentType> for ContentType {
+    fn from(value: CliContentType) -> Self {
+        match value {
+            CliContentType::Text => Self::Text,
+            CliContentType::Json => Self::Json,
+        }
+    }
+}
 
 impl ContentType {
     pub fn matches_string(&self, str: &String) -> bool {
