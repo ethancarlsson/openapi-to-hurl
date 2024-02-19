@@ -1,6 +1,6 @@
 use hurl_core::ast::{
     Assert, Comment, LineTerminator, Predicate, PredicateFunc, PredicateFuncValue, PredicateValue,
-    Query, QueryValue, Whitespace, 
+    Query, QueryValue, Whitespace,
 };
 use oas3::Schema;
 use regex::Regex;
@@ -101,7 +101,10 @@ pub fn assert_query_matches_with_comment(
         query,
         predicate,
         vec![],
-        Some(Comment { value: comment }),
+        Some(Comment {
+            value: comment,
+            source_info: empty_source_info(),
+        }),
     )
 }
 
@@ -148,16 +151,16 @@ pub fn assert_query_matches_predicate_with_filters(
     }
 }
 
-pub fn assert_status_less_than(num: i64) -> Assert { assert_query_matches_predicate(
+pub fn assert_status_less_than(num: i64) -> Assert {
+    assert_query_matches_predicate(
         &hurl_core::ast::QueryValue::Status,
         PredicateFuncValue::LessThan {
             space0: single_space(),
-            value: hurl_core::ast::PredicateValue::Integer(num),
+            value: hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Integer(num)),
             operator: true,
         },
     )
 }
-
 
 fn single_space() -> Whitespace {
     Whitespace {

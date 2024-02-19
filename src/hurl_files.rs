@@ -6,11 +6,13 @@ use crate::{
     custom_hurl_ast::{empty_source_info, empty_space, newline},
     errors::OperationError,
     request_body::request_body::SpecBodySettings,
-    response::response_validation::{validate_response_not_error, validation_response_full, HandleUnionsBy},
+    response::response_validation::{
+        validate_response_not_error, validation_response_full, HandleUnionsBy,
+    },
 };
 use hurl_core::ast::{
-    Body, EncodedString, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template,
-    TemplateElement, Version, VersionValue, Whitespace,
+    Body, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template, TemplateElement,
+    Version, VersionValue, Whitespace,
 };
 use log::{error, trace, warn};
 use oas3::{
@@ -240,10 +242,12 @@ fn to_file(
                 .headers
                 .iter()
                 .map(|kv| KeyValue {
-                    key: EncodedString {
-                        value: kv.0.clone(),
-                        encoded: kv.0.clone(),
-                        quotes: false,
+                    key: Template {
+                        delimiter: None,
+                        elements: vec![TemplateElement::String {
+                            value: "".to_string(),
+                            encoded: kv.0.clone(),
+                        }],
                         source_info: empty_source_info(),
                     },
                     value: Template {
@@ -273,7 +277,12 @@ fn to_file(
             }
             ResponseValidationChoice::NonError => Some(validate_response_not_error()),
             ResponseValidationChoice::Full => {
-                match validation_response_full(operation, spec, &settings.content_type, HandleUnionsBy::IgnoringThem) {
+                match validation_response_full(
+                    operation,
+                    spec,
+                    &settings.content_type,
+                    HandleUnionsBy::IgnoringThem,
+                ) {
                     Ok(response) => response,
                     Err(e) => {
                         match settings.error_handling {
@@ -285,7 +294,12 @@ fn to_file(
                 }
             }
             ResponseValidationChoice::FullWithOptionals => {
-                match validation_response_full(operation, spec, &settings.content_type, HandleUnionsBy::TreatingOptionalsAsRequired) {
+                match validation_response_full(
+                    operation,
+                    spec,
+                    &settings.content_type,
+                    HandleUnionsBy::TreatingOptionalsAsRequired,
+                ) {
                     Ok(response) => response,
                     Err(e) => {
                         match settings.error_handling {

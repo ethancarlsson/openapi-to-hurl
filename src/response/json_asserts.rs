@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use hurl_core::ast::{Assert, FilterValue, Float, PredicateValue, TemplateElement};
 use log::{debug, warn};
 use oas3::{spec::RefError, Schema, Spec};
-use serde_json::Number;
 
 use crate::{
     custom_hurl_ast::empty_source_info, hurl_files::single_space,
@@ -106,10 +105,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         &query_value,
                         hurl_core::ast::PredicateFuncValue::GreaterThan {
                             space0: single_space(),
-                            value: hurl_core::ast::PredicateValue::Float(Float {
-                                value: n.to_string().parse::<f64>().unwrap_or(0.0),
-                                encoded: n.to_string(),
-                            }),
+                            value: serde_num_to_hurl_num(n),
                             operator: true,
                         },
                     ))
@@ -118,10 +114,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         &query_value,
                         hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
                             space0: single_space(),
-                            value: hurl_core::ast::PredicateValue::Float(Float {
-                                value: n.to_string().parse::<f64>().unwrap_or(0.0),
-                                encoded: n.to_string(),
-                            }),
+                            value: serde_num_to_hurl_num(n),
                             operator: true,
                         },
                     ))
@@ -137,10 +130,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         &query_value,
                         hurl_core::ast::PredicateFuncValue::LessThan {
                             space0: single_space(),
-                            value: hurl_core::ast::PredicateValue::Float(Float {
-                                value: n.to_string().parse::<f64>().unwrap_or(0.0),
-                                encoded: n.to_string(),
-                            }),
+                            value: serde_num_to_hurl_num(n),
                             operator: true,
                         },
                     ))
@@ -149,10 +139,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         &query_value,
                         hurl_core::ast::PredicateFuncValue::LessThanOrEqual {
                             space0: single_space(),
-                            value: hurl_core::ast::PredicateValue::Float(Float {
-                                value: n.to_string().parse::<f64>().unwrap_or(0.0),
-                                encoded: n.to_string(),
-                            }),
+                            value: serde_num_to_hurl_num(n),
                             operator: true,
                         },
                     ))
@@ -260,7 +247,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         &query_value,
                         hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
                             space0: single_space(),
-                            value: PredicateValue::Integer(num),
+                            value: PredicateValue::Number(hurl_core::ast::Number::Integer(num)),
                             operator: true,
                         },
                         vec![hurl_core::ast::Filter {
@@ -288,7 +275,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                         &query_value,
                         hurl_core::ast::PredicateFuncValue::LessThanOrEqual {
                             space0: single_space(),
-                            value: PredicateValue::Integer(num),
+                            value: PredicateValue::Number(hurl_core::ast::Number::Integer(num)),
                             operator: true,
                         },
                         vec![hurl_core::ast::Filter {
@@ -367,6 +354,13 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
     }
 }
 
+fn serde_num_to_hurl_num(n: serde_json::Number) -> hurl_core::ast::PredicateValue {
+    hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Float(Float {
+        value: n.to_string().parse::<f64>().unwrap_or(0.0),
+        encoded: n.to_string(),
+    }))
+}
+
 fn simple_template(element: String) -> hurl_core::ast::Template {
     hurl_core::ast::Template {
         delimiter: Some('"'),
@@ -378,14 +372,11 @@ fn simple_template(element: String) -> hurl_core::ast::Template {
     }
 }
 
-fn predicate_integer_number(n: Number) -> PredicateValue {
+fn predicate_integer_number(n: serde_json::Number) -> PredicateValue {
     match n.to_string().parse::<i64>() {
-        Ok(num) => hurl_core::ast::PredicateValue::Integer(num),
+        Ok(num) => hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Integer(num)),
         // Fallback to float if not int
-        Err(_) => hurl_core::ast::PredicateValue::Float(Float {
-            value: n.to_string().parse::<f64>().unwrap_or(0.0),
-            encoded: n.to_string(),
-        }),
+        Err(_) => serde_num_to_hurl_num(n),
     }
 }
 
@@ -500,10 +491,12 @@ mod tests {
                 },
                 hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
                     space0: single_space(),
-                    value: hurl_core::ast::PredicateValue::Float(Float {
-                        value: 1.0,
-                        encoded: "1.0".to_string(),
-                    }),
+                    value: hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Float(
+                        Float {
+                            value: 1.0,
+                            encoded: "1.0".to_string(),
+                        },
+                    )),
                     operator: true,
                 },
             ),
@@ -514,10 +507,12 @@ mod tests {
                 },
                 hurl_core::ast::PredicateFuncValue::LessThan {
                     space0: single_space(),
-                    value: hurl_core::ast::PredicateValue::Float(Float {
-                        value: 3.0,
-                        encoded: "3.0".to_string(),
-                    }),
+                    value: hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Float(
+                        Float {
+                            value: 3.0,
+                            encoded: "3.0".to_string(),
+                        },
+                    )),
                     operator: true,
                 },
             ),
@@ -559,9 +554,9 @@ mod tests {
                 },
                 hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
                     space0: single_space(),
-                    value: hurl_core::ast::PredicateValue::Integer(
-                        1.to_string().parse::<i64>().unwrap(),
-                    ),
+                    value: hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Integer(
+                        1,
+                    )),
                     operator: true,
                 },
             ),
@@ -572,9 +567,9 @@ mod tests {
                 },
                 hurl_core::ast::PredicateFuncValue::LessThan {
                     space0: single_space(),
-                    value: hurl_core::ast::PredicateValue::Integer(
-                        3.to_string().parse::<i64>().unwrap(),
-                    ),
+                    value: hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Integer(
+                        3,
+                    )),
                     operator: true,
                 },
             ),
