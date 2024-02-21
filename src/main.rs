@@ -242,19 +242,19 @@ mod tests {
                 "_pets".to_string(),
                 vec![
                     HurlFileString {
-                        file: "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
+                        file: "GET {{host}}/pets?limit=3\n".to_string(),
                         filename: "listPets".to_string(),
                     },
                     HurlFileString {
                         file: "POST {{host}}/pets\n```json\n".to_string()
                             + &serde_json::to_string_pretty(&add_pet_request_body).unwrap()
-                            + "\n```\n\n\nHTTP 200\n",
+                            + "\n```\n",
                         filename: "addPet".to_string(),
                     },
                     HurlFileString {
                         file: "PATCH {{host}}/pets\n```json\n".to_string()
                             + &serde_json::to_string_pretty(&add_pet_request_body).unwrap()
-                            + &"\n```\n\n\nHTTP 200\n".to_string(),
+                            + &"\n```\n".to_string(),
                         filename: "updatePet".to_string(),
                     },
                 ],
@@ -262,7 +262,7 @@ mod tests {
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    file: "GET {{host}}/pets/string_value\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -287,7 +287,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "GET {{host}}/pets?limit=3\n\n\nHTTP 200\n".to_string(),
+                file: "GET {{host}}/pets?limit=3\n".to_string(),
                 filename: "listPets".to_string(),
             }],
         )];
@@ -303,7 +303,7 @@ mod tests {
             &Settings {
                 input: Some(spec_path),
                 operation_id_selection: Some(vec!["listPets".to_string()]),
-                validate_response: ResponseValidationChoice::NonError,
+                validate_response: ResponseValidationChoice::NonErrorCode,
                 ..Settings::default()
             },
             &spec,
@@ -341,7 +341,7 @@ mod tests {
             vec![HurlFileString {
                 file: "POST {{host}}/pets\n```json\n".to_string()
                     + &add_pet_request_body.to_string()
-                    + &"\n```\n\n\nHTTP 200\n".to_string(),
+                    + &"\n```\n".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];
@@ -370,14 +370,14 @@ mod tests {
             (
                 "_pets".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                    file: "GET {{host}}/pets\n".to_string(),
                     filename: "listPets".to_string(),
                 }],
             ),
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    file: "GET {{host}}/pets/string_value\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -404,7 +404,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\n\nHTTP 200\n".to_string(),
+                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];
@@ -422,7 +422,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Text,
-                validate_response: ResponseValidationChoice::Full,
+                validate_response: ResponseValidationChoice::Body,
                 ..Settings::default()
             },
             &spec,
@@ -449,7 +449,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Json,
-                validate_response: ResponseValidationChoice::Full,
+                validate_response: ResponseValidationChoice::Body,
                 ..Settings::default()
             },
             &spec,
@@ -484,7 +484,7 @@ mod tests {
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Json,
-                validate_response: ResponseValidationChoice::FullWithOptionals,
+                validate_response: ResponseValidationChoice::BodyWithOptionals,
                 ..Settings::default()
             },
             &spec,
@@ -534,7 +534,7 @@ mod tests {
             vec![HurlFileString {
                 file: "PATCH {{host}}/pets\n```json\n".to_string()
                     + &request_body.to_string()
-                    + &"\n```\n\n\nHTTP 200\n".to_string(),
+                    + &"\n```\n".to_string(),
                 filename: "updatePet".to_string(),
             }],
         )];
@@ -548,7 +548,7 @@ mod tests {
         let result = hurl_files_from_spec_path(
             &Settings {
                 input: Some(spec_path),
-                validate_response: crate::cli::ResponseValidationChoice::No,
+                validate_response: crate::cli::ResponseValidationChoice::None,
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 operation_id_selection: Some(vec![
                     "listPets".to_string(),
@@ -592,7 +592,7 @@ mod tests {
                     ],
                 },
                 query_params_choice: QueryParamChoice::None,
-                validate_response: ResponseValidationChoice::No,
+                validate_response: ResponseValidationChoice::None,
                 operation_id_selection: Some(vec![
                     "listPets".to_string(),
                     "showPetById".to_string(),
@@ -642,14 +642,14 @@ mod tests {
             (
                 "_pets".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets\n\n\nHTTP 200\n".to_string(),
+                    file: "GET {{host}}/pets\n".to_string(),
                     filename: "listPets".to_string(),
                 }],
             ),
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                    file: "GET {{host}}/pets/string_value\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -676,7 +676,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets_{petId}".to_string(),
             vec![HurlFileString {
-                file: "GET {{host}}/pets/string_value\n\n\nHTTP 200\n".to_string(),
+                file: "GET {{host}}/pets/string_value\n".to_string(),
                 filename: "showPetById".to_string(),
             }],
         )];

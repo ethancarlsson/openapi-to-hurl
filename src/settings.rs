@@ -31,7 +31,7 @@ impl TryFrom<Cli> for Settings {
         Ok(Self {
             input: cli.input,
             out_dir: cli.out_dir,
-            validate_response: cli.validate_response,
+            validate_response: cli.validation,
             query_params_choice: cli.query_params,
             variables_update_strategy: cli.variables_update_strategy,
             custom_variables: CustomVariables {

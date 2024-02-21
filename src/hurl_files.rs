@@ -8,13 +8,13 @@ use crate::{
     request_body::request_body::SpecBodySettings,
     response::response_validation::{
         validate_response_not_error, validation_response_full, HandleUnionsBy,
-    }, settings::Settings,
+    },
+    settings::Settings,
 };
 use hurl_core::ast::{
-    Body, Entry, HurlFile, KeyValue, Method, Request, Response, Status, Template, TemplateElement,
-    Version, VersionValue, Whitespace,
+    Body, Entry, HurlFile, KeyValue, Method, Request, Template, TemplateElement, Whitespace,
 };
-use log::{error, trace, warn};
+use log::{error, trace};
 use oas3::{
     spec::{
         FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, RequestBody,
@@ -269,13 +269,9 @@ fn to_file(
             source_info: empty_source_info(),
         },
         response: match settings.validate_response {
-            ResponseValidationChoice::No => None,
-            ResponseValidationChoice::Http200 => {
-                warn!("Using deprecated option `--validate-response http-200`");
-                Some(status_code_200_response())
-            }
-            ResponseValidationChoice::NonError => Some(validate_response_not_error()),
-            ResponseValidationChoice::Full => {
+            ResponseValidationChoice::None => None,
+            ResponseValidationChoice::NonErrorCode => Some(validate_response_not_error()),
+            ResponseValidationChoice::Body => {
                 match validation_response_full(
                     operation,
                     spec,
@@ -292,7 +288,7 @@ fn to_file(
                     }
                 }
             }
-            ResponseValidationChoice::FullWithOptionals => {
+            ResponseValidationChoice::BodyWithOptionals => {
                 match validation_response_full(
                     operation,
                     spec,
@@ -355,27 +351,6 @@ fn parse_request_body(
         operation_id,
         settings,
     )?)
-}
-
-fn status_code_200_response() -> Response {
-    Response {
-        line_terminators: vec![newline(), newline()],
-        version: Version {
-            value: VersionValue::VersionAny,
-            source_info: empty_source_info(),
-        },
-        space0: empty_space(),
-        status: Status {
-            value: hurl_core::ast::StatusValue::Specific(200),
-            source_info: empty_source_info(),
-        },
-        space1: single_space(),
-        line_terminator0: newline(),
-        headers: vec![],
-        sections: vec![],
-        body: None,
-        source_info: empty_source_info(),
-    }
 }
 
 fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {

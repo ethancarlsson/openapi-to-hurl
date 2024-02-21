@@ -5,19 +5,17 @@ use clap::{Parser, ValueEnum};
 #[derive(ValueEnum, Clone, Default)]
 pub enum ResponseValidationChoice {
     /// No Validation
-    No,
     #[default]
-    /// HTTP Status Code. WARNING this will be deprecated in version 1
-    Http200,
+    None,
     /// Validates the result is any status code less than 400
-    NonError,
-    /// Validates the structure and types of the entire response
+    NonErrorCode,
+    /// Validates the structure and types of the response body
     /// NOTE: This tool will not produce response validation for union types (nullable, oneOf, not
     /// required, etc).
-    Full,
-    /// Validates the full strucure and treats all properties in the response body
+    Body,
+    /// Validates the response body and treats all properties in the response body
     /// as if they are required.
-    FullWithOptionals,
+    BodyWithOptionals,
 }
 
 #[derive(ValueEnum, Clone, Default)]
@@ -101,9 +99,9 @@ pub struct Cli {
     /// files instead of stdout
     #[arg(short = 'o', long)]
     pub out_dir: Option<std::path::PathBuf>,
-    /// Response validation
-    #[arg(short = 'r', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
-    pub validate_response: ResponseValidationChoice,
+    /// This option indicates how the response should be validated
+    #[arg(short = 'n', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
+    pub validation: ResponseValidationChoice,
     /// Input: `HEADER_KEY=HEADER_VALUE`. Custom headers will be added to each request as `HEADER_KEY: {{HEADER_KEY}}`
     /// and to the variables file as `HEADER_KEY=HEADER_VALUE`
     #[arg(long, value_parser = parse_key_val::<String, String>)]
