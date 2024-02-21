@@ -542,14 +542,14 @@ mod tests {
     }
 
     #[test]
-    fn hurl_files_from_spec_no_response_validation() {
+    fn hurl_files_from_spec_with_no_response_validation_with_all_query_params() {
         let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
         let spec = oas3::from_path(spec_path.clone()).unwrap();
         let result = hurl_files_from_spec_path(
             &Settings {
                 input: Some(spec_path),
                 validate_response: crate::cli::ResponseValidationChoice::None,
-                query_params_choice: crate::cli::QueryParamChoice::Defaults,
+                query_params_choice: crate::cli::QueryParamChoice::All,
                 operation_id_selection: Some(vec![
                     "listPets".to_string(),
                     "showPetById".to_string(),
@@ -563,7 +563,7 @@ mod tests {
             (
                 "_pets".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets?limit=3\n".to_string(),
+                    file: "GET {{host}}/pets?limit=3&offset=1\n".to_string(),
                     filename: "listPets".to_string(),
                 }],
             ),

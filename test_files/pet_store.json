@@ -26,10 +26,21 @@
             "name": "limit",
             "in": "query",
             "description": "How many items to return at one time (max 100)",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "format": "int32"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
               "maximum": 100,
+              "example": 1,
               "format": "int32"
             }
           }
