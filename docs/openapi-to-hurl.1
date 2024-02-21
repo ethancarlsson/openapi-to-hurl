@@ -4,7 +4,7 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
@@ -29,8 +29,8 @@ body: Validates the structure and types of the response body NOTE: This tool wil
 body\-with\-optionals: Validates the response body and treats all properties in the response body as if they are required
 .RE
 .TP
-\fB\-\-header\-vars\fR=\fIHEADER_VARS\fR
-Input: `HEADER_KEY=HEADER_VALUE`. Custom headers will be added to each request as `HEADER_KEY: {{HEADER_KEY}}` and to the variables file as `HEADER_KEY=HEADER_VALUE`
+\fB\-r\fR, \fB\-\-header\-vars\fR=\fIHEADER_VARS\fR
+Variables will be added to the hurl variables file and the header of each request. Format: `HEADER_KEY=HEADER_VALUE`
 .TP
 \fB\-q\fR, \fB\-\-query\-params\fR=\fIQUERY_PARAMS\fR [default: defaults]
 Lets you choose whether, and how to, pass query params
