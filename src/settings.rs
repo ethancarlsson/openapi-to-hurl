@@ -9,15 +9,15 @@ use anyhow::anyhow;
 
 #[derive(Default)]
 pub enum OutStrategy {
-    // Default here for convenience in unit tests, real default is files.
     #[default]
     Console,
     Files(std::path::PathBuf),
 }
 
+// V O vs O V
 #[derive(Default)]
 pub struct Settings {
-    pub path: std::path::PathBuf,
+    pub input: Option<std::path::PathBuf>,
     pub out: OutStrategy,
     pub validate_response: ResponseValidationChoice,
     pub query_params_choice: QueryParamChoice,
@@ -37,14 +37,14 @@ impl TryFrom<Cli> for Settings {
 
     fn try_from(cli: Cli) -> Result<Self, Self::Error> {
         Ok(Self {
-            path: cli.path,
+            input: cli.input,
             out: match cli.output_to {
                 OutputTo::Console => OutStrategy::Console,
                 OutputTo::Files => OutStrategy::Files(match cli.out {
                     Some(f) => f,
                     None => {
                         return Err(anyhow!(
-                            "Option `out` is required if `--output_to files` option is selected"
+                            "Option `out` is required if `--output-to files` option is selected"
                         ))
                     }
                 }),

@@ -4,12 +4,12 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-\-output\-to\fR] [\fB\-r\fR|\fB\-\-validate\-response\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] <\fIPATH\fR> [\fIOUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-\-output\-to\fR] [\fB\-r\fR|\fB\-\-validate\-response\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] [\fIOUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
 .TP
-\fB\-\-output\-to\fR=\fIOUTPUT_TO\fR [default: files]
+\fB\-\-output\-to\fR=\fIOUTPUT_TO\fR [default: console]
 Where will the output go
 .br
 
@@ -132,8 +132,8 @@ terminate: Terminate the program on any errors found with the specification
 \fB\-h\fR, \fB\-\-help\fR
 Print help (see a summary with \*(Aq\-h\*(Aq)
 .TP
-<\fIPATH\fR>
-The path to the openapi specification
+[\fIINPUT\fR]
+Input can be either a path to the specification or the result of stdin if used in a pipeline
 .TP
 [\fIOUT\fR]
 Directory where the hurl files will be created
