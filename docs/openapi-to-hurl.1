@@ -4,7 +4,7 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-r\fR|\fB\-\-validate\-response\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
@@ -12,23 +12,21 @@ Generate hurl files from an Open API 3 specification
 \fB\-o\fR, \fB\-\-out\-dir\fR=\fIOUT_DIR\fR
 If the `out\-dir` argument is provided the output will go to a series of directories and files instead of stdout
 .TP
-\fB\-r\fR, \fB\-\-validate\-response\fR=\fIVALIDATE_RESPONSE\fR [default: http200]
-Response validation
+\fB\-n\fR, \fB\-\-validation\fR=\fIVALIDATION\fR [default: none]
+This option indicates how the response should be validated
 .br
 
 .br
 \fIPossible values:\fR
 .RS 14
 .IP \(bu 2
-no: No Validation
+none: No Validation
 .IP \(bu 2
-http200: HTTP Status Code. WARNING this will be deprecated in version 1
+non\-error\-code: Validates the result is any status code less than 400
 .IP \(bu 2
-non\-error: Validates the result is any status code less than 400
+body: Validates the structure and types of the response body NOTE: This tool will not produce response validation for union types (nullable, oneOf, not required, etc)
 .IP \(bu 2
-full: Validates the structure and types of the entire response NOTE: This tool will not produce response validation for union types (nullable, oneOf, not required, etc)
-.IP \(bu 2
-full\-with\-optionals: Validates the full strucure and treats all properties in the response body as if they are required
+body\-with\-optionals: Validates the response body and treats all properties in the response body as if they are required
 .RE
 .TP
 \fB\-\-header\-vars\fR=\fIHEADER_VARS\fR
