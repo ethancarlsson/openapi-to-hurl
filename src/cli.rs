@@ -39,17 +39,6 @@ pub enum VariablesUpdateStrategy {
 }
 
 #[derive(ValueEnum, Clone, Default)]
-pub enum OutputTo {
-    /// If console is selected prints all hurl files to console. NOTE: Does not
-    /// print variables to console.
-    #[default]
-    Console,
-    /// If file is selected "out" is required. NOTE: A variables file will also
-    /// be created.
-    Files,
-}
-
-#[derive(ValueEnum, Clone, Default)]
 pub enum Formatting {
     /// Will not add any characters to the output that do not affect syntax
     NoFormatting,
@@ -108,11 +97,10 @@ pub struct Cli {
     /// Input can be either a path to the specification or the result of stdin if used in a
     /// pipeline
     pub input: Option<std::path::PathBuf>,
-    /// Directory where the hurl files will be created
-    pub out: Option<std::path::PathBuf>,
-    /// Where will the output go
-    #[arg(long, default_value_t = OutputTo::default(), value_enum)]
-    pub output_to: OutputTo,
+    /// If the `out-dir` argument is provided the output will go to a series of directories and
+    /// files instead of stdout
+    #[arg(short = 'o', long)]
+    pub out_dir: Option<std::path::PathBuf>,
     /// Response validation
     #[arg(short = 'r', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
     pub validate_response: ResponseValidationChoice,
