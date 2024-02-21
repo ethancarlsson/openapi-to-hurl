@@ -33,17 +33,17 @@ impl TryFrom<Cli> for Settings {
             out_dir: cli.out_dir,
             validate_response: cli.validation,
             query_params_choice: cli.query_params,
-            variables_update_strategy: cli.variables_update_strategy,
+            variables_update_strategy: cli.variables_file_update,
             custom_variables: CustomVariables {
                 headers: cli.header_vars,
             },
-            operation_id_selection: cli.select_operation_id,
+            operation_id_selection: cli.operation_id,
             tags: cli.tag,
             formatting: cli.formatting,
             content_type: cli.content_type.into(),
             log_level: cli.log_level,
             quiet: cli.quiet,
-            error_handling: cli.handle_errors,
+            error_handling: cli.error_handling,
         })
     }
 }

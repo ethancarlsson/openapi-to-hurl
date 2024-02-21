@@ -335,7 +335,7 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
                             },
                         );
                     } else {
-                        debug!("Not generating asserts for property at {}. The property is not required to generate asserts for optional properties use the option `--validation-response full-with-optionals`", format!("{path}.{}", property.0));
+                        debug!("Not generating asserts for property at {}. The property is not required to generate asserts for optional properties use the option `--validation body-with-optionals`", format!("{path}.{}", property.0));
                     }
                 }
                 HandleUnionsBy::TreatingOptionalsAsRequired => {
