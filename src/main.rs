@@ -4,11 +4,11 @@ use crate::{
 };
 use std::{
     fs::{self, File},
-    io::Write,
+    io::{Write, self, IsTerminal},
 };
 
 use crate::cli::Cli;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Context, Result, anyhow};
 use clap::Parser;
 use cli::ErrorHandling;
 use errors::OperationError;
@@ -39,8 +39,18 @@ fn main() -> Result<()> {
         .unwrap();
 
     trace!("parsing oas3 from path");
-    let spec =
-        oas3::from_path(&args.path).with_context(|| format!("Invalid Open API 3.1 Specification. This tool only aims to support OpenAPI 3.1 and up."))?;
+
+    let spec = match &args.input {
+        Some(p) => oas3::from_path(p).with_context(|| format!("Invalid Open API 3.1 Specification or file I/O error."))?,
+        None => {
+            let stdin = io::stdin().lock();
+            if stdin.is_terminal() {
+                return Err(anyhow!("Input can be either the path to an Open API specification file or it can be the entire specification passed in to stdin\n\nUsage: openapi-to-hurl <INPUT> [OUTPUT]\n\nFor example `openapi-to-hurl path/to/openapi/spec.json` or `cat path/to/openapi/spec.json | openapi-to-hurl`\n\nFor more information, try '--help'."));
+            } else {
+                oas3::from_reader(stdin).with_context(|| format!("Invalid Open API 3.1 Specification or I/O error."))?
+            }
+        },
+    };
 
     trace!("transforming oas3 to hurl files");
     let hurl_files = hurl_files_from_spec_path(&args, &spec)?;
@@ -219,7 +229,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 ..Settings::default()
             },
             &spec,
@@ -267,7 +277,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 operation_id_selection: Some(vec!["listPets".to_string()]),
                 ..Settings::default()
             },
@@ -291,7 +301,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 operation_id_selection: Some(vec!["listPets".to_string()]),
                 validate_response: ResponseValidationChoice::NonError,
                 ..Settings::default()
@@ -316,7 +326,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 formatting: Formatting::NoFormatting,
                 ..Settings::default()
@@ -345,7 +355,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec![
                     "listPets".to_string(),
@@ -382,7 +392,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Text,
@@ -408,7 +418,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Text,
@@ -435,7 +445,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Json,
@@ -470,7 +480,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["addPet".to_string()]),
                 content_type: ContentType::Json,
@@ -507,7 +517,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["updatePet".to_string()]),
                 content_type: ContentType::Text,
@@ -537,7 +547,7 @@ mod tests {
         let spec = oas3::from_path(spec_path.clone()).unwrap();
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 validate_response: crate::cli::ResponseValidationChoice::No,
                 query_params_choice: crate::cli::QueryParamChoice::Defaults,
                 operation_id_selection: Some(vec![
@@ -574,7 +584,7 @@ mod tests {
         let spec = oas3::from_path(spec_path.clone()).unwrap();
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 custom_variables: CustomVariables {
                     headers: vec![
                         ("Authorization".to_string(), "Bearer test".to_string()),
@@ -620,7 +630,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 tags: Some(vec!["petsRead".to_string()]),
                 ..Settings::default()
@@ -654,7 +664,7 @@ mod tests {
 
         let result = hurl_files_from_spec_path(
             &Settings {
-                path: spec_path,
+                input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
                 operation_id_selection: Some(vec!["showPetById".to_string()]),
                 tags: Some(vec!["petsRead".to_string()]),
