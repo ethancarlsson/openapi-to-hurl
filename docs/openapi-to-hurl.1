@@ -4,13 +4,13 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-file\-update\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-error\-handling\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
 .TP
 \fB\-o\fR, \fB\-\-out\-dir\fR=\fIOUT_DIR\fR
-If the `out\-dir` argument is provided the output will go to a series of directories and files instead of stdout
+If the `out\-dir` argument is provided the output will go to a series of directories and files instead of stdout. Note: if now `out\-dir` is given, no variables file will be created
 .TP
 \fB\-n\fR, \fB\-\-validation\fR=\fIVALIDATION\fR [default: none]
 This option indicates how the response should be validated
@@ -24,7 +24,7 @@ none: No Validation
 .IP \(bu 2
 non\-error\-code: Validates the result is any status code less than 400
 .IP \(bu 2
-body: Validates the structure and types of the response body NOTE: This tool will not produce response validation for union types (nullable, oneOf, not required, etc)
+body: Validates the structure and types of the response body. Note: This tool will not produce response validation for union types (nullable, oneOf, not required, etc)
 .IP \(bu 2
 body\-with\-optionals: Validates the response body and treats all properties in the response body as if they are required
 .RE
@@ -33,7 +33,7 @@ body\-with\-optionals: Validates the response body and treats all properties in 
 Variables will be added to the hurl variables file and the header of each request. Format: `HEADER_KEY=HEADER_VALUE`
 .TP
 \fB\-q\fR, \fB\-\-query\-params\fR=\fIQUERY_PARAMS\fR [default: defaults]
-Lets you choose whether, and how to, pass query params
+Choose whether, and how to, pass query params
 .br
 
 .br
@@ -45,13 +45,13 @@ none: No query params
 defaults: Default values based on types
 .RE
 .TP
-\fB\-i\fR, \fB\-\-select\-operation\-id\fR=\fISELECT_OPERATION_ID\fR
-Select an operationId from Open API Spec, can select multiple operationIds
+\fB\-i\fR, \fB\-\-operation\-id\fR=\fIOPERATION_ID\fR
+Generate only the operations identified with this options, e.g. `openapi\-to\-hurl openapi.json \-i getProducts \-i createProduct`
 .TP
 \fB\-t\fR, \fB\-\-tag\fR=\fITAG\fR
-Filter by tags in the Open API Spec, can select multiple tags. If used with the "select\-operation\-id" option the request will first be narrowed by tag then by operationId
+Generate only the operations under the given tags, e.g. `openapi\-to\-hurl openapi.json \-t orders \-t products`. If used with the `operation\-id` option the generated files will first be narrowed by tag then by operationId
 .TP
-\fB\-\-variables\-update\-strategy\fR=\fIVARIABLES_UPDATE_STRATEGY\fR [default: merge]
+\fB\-\-variables\-file\-update\fR=\fIVARIABLES_FILE_UPDATE\fR [default: merge]
 How the variables file should be updated
 .br
 
@@ -78,7 +78,7 @@ request\-bodies: Will add some formatting to the request body
 .RE
 .TP
 \fB\-\-content\-type\fR=\fICONTENT_TYPE\fR [default: json]
-Content type of the request. If the selected content type is not available in the schema or not supported by this tool the tool will select the first scpecified content type supported by this tool. If no valid content type is found the tool will use an empty request body
+Desired content type of the request. If the selected content type is not available in the schema or not supported by this tool the tool will select the first scpecified content type supported by this tool. If no valid content type is found the tool will use an empty request body
 .br
 
 .br
@@ -104,8 +104,8 @@ trace: The "trace" level
 \fB\-\-quiet\fR
 Set this to true to silence all logging
 .TP
-\fB\-\-handle\-errors\fR=\fIHANDLE_ERRORS\fR [default: terminate]
-Set to `log` to log errors and keep generating hurl files where possible
+\fB\-\-error\-handling\fR=\fIERROR_HANDLING\fR [default: terminate]
+How to handle recoverable errors
 .br
 
 .br
