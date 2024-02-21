@@ -174,7 +174,54 @@ fn to_file(
 
     match settings.query_params_choice {
         crate::cli::QueryParamChoice::None => (),
-        crate::cli::QueryParamChoice::Defaults => {
+        crate::cli::QueryParamChoice::Required => {
+            let mut required_query_params = query_params.filter(|p| p.required == Some(true));
+
+            let uri_with_first_query_param = format!(
+                "{uri}{}",
+                match required_query_params.next() {
+                    Some(param) => {
+                        let schema = param.schema.unwrap_or(Schema {
+                            example: None,
+                            ..Schema::default()
+                        });
+                        format!(
+                            "?{}={}",
+                            param.name,
+                            match schema.example {
+                                Some(e) => e.to_string().replace("\"", ""),
+                                None => path_param_from_schema_type(
+                                    schema.schema_type.unwrap_or(SchemaType::String)
+                                )
+                                .to_string(),
+                            }
+                        )
+                    }
+                    None => "".to_string(),
+                }
+            );
+
+            uri = required_query_params.fold(uri_with_first_query_param, |uri, param| {
+                let schema = param.schema.unwrap_or(Schema {
+                    example: None,
+                    ..Schema::default()
+                });
+                format!(
+                    "{uri}&{}={}",
+                    param.name,
+                    match schema.example {
+                        Some(e) => {
+                            e.to_string().replace("\"", "")
+                        }
+                        None => path_param_from_schema_type(
+                            schema.schema_type.unwrap_or(SchemaType::String)
+                        )
+                        .to_string(),
+                    }
+                )
+            });
+        }
+        crate::cli::QueryParamChoice::All => {
             let uri_with_first_query_param = format!(
                 "{uri}{}",
                 match query_params.next() {
@@ -200,16 +247,22 @@ fn to_file(
             );
 
             uri = query_params.fold(uri_with_first_query_param, |uri, param| {
+                let schema = param.schema.unwrap_or(Schema {
+                    example: None,
+                    ..Schema::default()
+                });
                 format!(
                     "{uri}&{}={}",
                     param.name,
-                    path_param_from_schema_type(
-                        param
-                            .schema
-                            .unwrap_or(Schema::default())
-                            .schema_type
-                            .unwrap_or(SchemaType::String)
-                    )
+                    match schema.example {
+                        Some(e) => {
+                            e.to_string().replace("\"", "")
+                        }
+                        None => path_param_from_schema_type(
+                            schema.schema_type.unwrap_or(SchemaType::String)
+                        )
+                        .to_string(),
+                    }
                 )
             });
         }

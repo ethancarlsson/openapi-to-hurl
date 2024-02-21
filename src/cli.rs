@@ -22,9 +22,11 @@ pub enum ResponseValidationChoice {
 pub enum QueryParamChoice {
     /// No query params.
     None,
-    /// Default values based on types.
+    /// Only the required query params
     #[default]
-    Defaults,
+    Required,
+    /// Sets a value for all query params
+    All,
 }
 
 #[derive(ValueEnum, Clone, Default)]

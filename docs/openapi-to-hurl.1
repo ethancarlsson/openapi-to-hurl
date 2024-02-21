@@ -32,7 +32,7 @@ body\-with\-optionals: Validates the response body and treats all properties in 
 \fB\-r\fR, \fB\-\-header\-vars\fR=\fIHEADER_VARS\fR
 Variables will be added to the hurl variables file and the header of each request. Format: `HEADER_KEY=HEADER_VALUE`
 .TP
-\fB\-q\fR, \fB\-\-query\-params\fR=\fIQUERY_PARAMS\fR [default: defaults]
+\fB\-q\fR, \fB\-\-query\-params\fR=\fIQUERY_PARAMS\fR [default: required]
 Choose whether, and how to, pass query params
 .br
 
@@ -42,7 +42,9 @@ Choose whether, and how to, pass query params
 .IP \(bu 2
 none: No query params
 .IP \(bu 2
-defaults: Default values based on types
+required: Only the required query params
+.IP \(bu 2
+all: Sets a value for all query params
 .RE
 .TP
 \fB\-i\fR, \fB\-\-operation\-id\fR=\fIOPERATION_ID\fR
