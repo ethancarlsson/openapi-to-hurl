@@ -28,6 +28,11 @@ mod variable_files;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    if cli.version {
+        return Ok(println!(env!("CARGO_PKG_VERSION")));
+    }
+
     let args: Settings = cli.try_into()?;
 
     stderrlog::new()

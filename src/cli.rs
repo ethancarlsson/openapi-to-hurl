@@ -4,7 +4,7 @@ use clap::{Parser, ValueEnum};
 
 #[derive(ValueEnum, Clone, Default)]
 pub enum ResponseValidationChoice {
-    /// No Validation.
+    /// No validation.
     #[default]
     None,
     /// Validates the result is any status code less than 400.
@@ -138,6 +138,8 @@ pub struct Cli {
     /// How to handle recoverable errors.
     #[arg(long, default_value_t = ErrorHandling::default(), value_enum)]
     pub error_handling: ErrorHandling,
+    #[arg(short = 'v', long)]
+    pub version: bool
 }
 
 /// Parse a single key-value pair
