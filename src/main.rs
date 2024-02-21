@@ -4,11 +4,11 @@ use crate::{
 };
 use std::{
     fs::{self, File},
-    io::{Write, self, IsTerminal},
+    io::{self, IsTerminal, Write},
 };
 
 use crate::cli::Cli;
-use anyhow::{bail, Context, Result, anyhow};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::Parser;
 use cli::ErrorHandling;
 use errors::OperationError;
@@ -41,15 +41,17 @@ fn main() -> Result<()> {
     trace!("parsing oas3 from path");
 
     let spec = match &args.input {
-        Some(p) => oas3::from_path(p).with_context(|| format!("Invalid Open API 3.1 Specification or file I/O error."))?,
+        Some(p) => oas3::from_path(p)
+            .with_context(|| format!("Invalid Open API 3.1 Specification or file I/O error."))?,
         None => {
             let stdin = io::stdin().lock();
             if stdin.is_terminal() {
                 return Err(anyhow!("Input can be either the path to an Open API specification file or it can be the entire specification passed in to stdin\n\nUsage: openapi-to-hurl <INPUT> [OUTPUT]\n\nFor example `openapi-to-hurl path/to/openapi/spec.json` or `cat path/to/openapi/spec.json | openapi-to-hurl`\n\nFor more information, try '--help'."));
             } else {
-                oas3::from_reader(stdin).with_context(|| format!("Invalid Open API 3.1 Specification or I/O error."))?
+                oas3::from_reader(stdin)
+                    .with_context(|| format!("Invalid Open API 3.1 Specification or I/O error."))?
             }
-        },
+        }
     };
 
     trace!("transforming oas3 to hurl files");
@@ -58,11 +60,9 @@ fn main() -> Result<()> {
     let variable_files = VariableFiles::from_spec(&spec, args.custom_variables);
 
     trace!("returning values out");
-    match args.out {
-        settings::OutStrategy::Console => out_to_console(hurl_files)?,
-        settings::OutStrategy::Files(out_path) => {
-            out_to_files(hurl_files, variable_files, out_path)?
-        }
+    match args.out_dir {
+        Some(out_dir) => out_to_files(hurl_files, variable_files, out_dir)?,
+        None => out_to_console(hurl_files)?,
     };
 
     Ok(())

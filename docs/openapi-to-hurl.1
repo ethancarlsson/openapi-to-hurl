@@ -4,23 +4,13 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-\-output\-to\fR] [\fB\-r\fR|\fB\-\-validate\-response\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] [\fIOUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-r\fR|\fB\-\-validate\-response\fR] [\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-select\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-update\-strategy\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-handle\-errors\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
 .TP
-\fB\-\-output\-to\fR=\fIOUTPUT_TO\fR [default: console]
-Where will the output go
-.br
-
-.br
-\fIPossible values:\fR
-.RS 14
-.IP \(bu 2
-console: If console is selected prints all hurl files to console. NOTE: Does not print variables to console
-.IP \(bu 2
-files: If file is selected "out" is required. NOTE: A variables file will also be created
-.RE
+\fB\-o\fR, \fB\-\-out\-dir\fR=\fIOUT_DIR\fR
+If the `out\-dir` argument is provided the output will go to a series of directories and files instead of stdout
 .TP
 \fB\-r\fR, \fB\-\-validate\-response\fR=\fIVALIDATE_RESPONSE\fR [default: http200]
 Response validation
@@ -134,6 +124,3 @@ Print help (see a summary with \*(Aq\-h\*(Aq)
 .TP
 [\fIINPUT\fR]
 Input can be either a path to the specification or the result of stdin if used in a pipeline
-.TP
-[\fIOUT\fR]
-Directory where the hurl files will be created
