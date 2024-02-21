@@ -102,9 +102,8 @@ pub struct Cli {
     /// This option indicates how the response should be validated
     #[arg(short = 'n', long, default_value_t = ResponseValidationChoice::default(), value_enum)]
     pub validation: ResponseValidationChoice,
-    /// Input: `HEADER_KEY=HEADER_VALUE`. Custom headers will be added to each request as `HEADER_KEY: {{HEADER_KEY}}`
-    /// and to the variables file as `HEADER_KEY=HEADER_VALUE`
-    #[arg(long, value_parser = parse_key_val::<String, String>)]
+    /// Variables will be added to the hurl variables file and the header of each request. Format: `HEADER_KEY=HEADER_VALUE`
+    #[arg(short = 'r', long, value_parser = parse_key_val::<String, String>)]
     pub header_vars: Vec<(String, String)>,
     /// Lets you choose whether, and how to, pass query params
     #[arg(short = 'q', long, default_value_t = QueryParamChoice::default(), value_enum)]
