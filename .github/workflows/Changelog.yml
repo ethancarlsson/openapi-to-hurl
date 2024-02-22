@@ -28,12 +28,13 @@ jobs:
           profile: minimal
           toolchain: 1.75.0
           override: true
-
+      # Build and generate documentation (man docs are a step in the build of this tool)
       - uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release
-
+      - name: Generate HTML man documentation
+        run: sudo apt install groff && groff -mandoc -Thtml docs/openapi-to-hurl.1 > docs/man.html
       # install and cache hyperfine
       - id: cache-hyperfine
         name: Cache hyperfine
