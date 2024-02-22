@@ -4,7 +4,7 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-file\-update\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-error\-handling\fR] [\fB\-v\fR|\fB\-\-version\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-file\-update\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-error\-handling\fR] [\fB\-\-grouping\fR] [\fB\-v\fR|\fB\-\-version\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
@@ -117,6 +117,19 @@ How to handle recoverable errors
 log: Log the error to stderr but continue processing. Note that the program will still terminate if the error is unrecoverable, e.g. the input isn\*(Aqt a valid Open API Specification
 .IP \(bu 2
 terminate: Terminate the program on any errors found with the specification
+.RE
+.TP
+\fB\-\-grouping\fR=\fIGROUPING\fR [default: flat]
+How the operations will be grouped into directories. Has no effect if no `\-\-out\-dir` argument is provided
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+flat: Flat grouping will group all operations together
+.IP \(bu 2
+path: Path grouping will group all operations by their uri path, with a directory per path
 .RE
 .TP
 \fB\-v\fR, \fB\-\-version\fR

@@ -72,7 +72,6 @@ pub enum LogLevel {
     Trace,
 }
 
-
 #[derive(ValueEnum, Clone, Default)]
 pub enum CliContentType {
     Text,
@@ -89,6 +88,15 @@ pub enum ErrorHandling {
     /// Terminate the program on any errors found with the specification.
     #[default]
     Terminate,
+}
+
+#[derive(ValueEnum, Clone, Default)]
+pub enum Grouping {
+    /// Flat grouping will group all operations together
+    #[default]
+    Flat,
+    /// Path grouping will group all operations by their uri path, with a directory per path
+    Path,
 }
 
 /// Generate hurl files from an Open API 3 specification.
@@ -114,7 +122,7 @@ pub struct Cli {
     /// Generate only the operations identified with this options, e.g. `openapi-to-hurl openapi.json -i getProducts -i createProduct`.
     #[arg(short = 'i', long)]
     pub operation_id: Option<Vec<String>>,
-    /// Generate only the operations under the given tags, e.g. `openapi-to-hurl openapi.json -t orders -t products`. 
+    /// Generate only the operations under the given tags, e.g. `openapi-to-hurl openapi.json -t orders -t products`.
     /// If used with the `operation-id` option the generated files will first be narrowed by tag then by operationId.
     #[arg(short = 't', long)]
     pub tag: Option<Vec<String>>,
@@ -138,8 +146,12 @@ pub struct Cli {
     /// How to handle recoverable errors.
     #[arg(long, default_value_t = ErrorHandling::default(), value_enum)]
     pub error_handling: ErrorHandling,
+    /// How the operations will be grouped into directories. Has no effect if no `--out-dir`
+    /// argument is provided.
+    #[arg( long, default_value_t = Grouping::default(), value_enum)]
+    pub grouping: Grouping,
     #[arg(short = 'v', long)]
-    pub version: bool
+    pub version: bool,
 }
 
 /// Parse a single key-value pair
@@ -155,4 +167,3 @@ where
         .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{s}`"))?;
     Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
 }
-
