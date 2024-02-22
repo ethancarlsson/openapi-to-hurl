@@ -10,7 +10,7 @@ use std::{
 use crate::cli::Cli;
 use anyhow::{anyhow, bail, Context, Result};
 use clap::Parser;
-use cli::ErrorHandling;
+use cli::{ErrorHandling, Grouping};
 use errors::OperationError;
 use hurl_files::HurlFiles;
 use log::{error, info, trace};
@@ -28,6 +28,7 @@ mod variable_files;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    let grouping = cli.grouping.clone();
 
     if cli.version {
         return Ok(println!(env!("CARGO_PKG_VERSION")));
@@ -66,7 +67,7 @@ fn main() -> Result<()> {
 
     trace!("returning values out");
     match args.out_dir {
-        Some(out_dir) => out_to_files(hurl_files, variable_files, out_dir)?,
+        Some(out_dir) => out_to_files(hurl_files, variable_files, out_dir, grouping)?,
         None => out_to_console(hurl_files)?,
     };
 
@@ -86,26 +87,49 @@ fn out_to_files(
     hurl_files: Vec<(String, Vec<HurlFileString>)>,
     variable_files: VariableFiles,
     out_path: std::path::PathBuf,
+    grouping: Grouping,
 ) -> Result<()> {
     let mut files_created_count = 0;
-    for file_contents in hurl_files {
-        let dir_path = format!("{}/{}", out_path.display(), file_contents.0.clone());
-        fs::create_dir_all(&dir_path)
-            .with_context(|| format!("couldn't create directory: {dir_path}"))?;
+    match grouping {
+        Grouping::Flat => {
+            for file_contents in hurl_files {
+                for file_string in file_contents.1 {
+                    let file_path = format!(
+                        "{}/{}.hurl",
+                        out_path.display(),
+                        file_string.filename
+                    );
+                    let mut file = File::create(&file_path)
+                        .with_context(|| format!("Could create file {file_path}."))?;
 
-        for file_string in file_contents.1 {
-            let file_path = format!(
-                "{}/{}/{}.hurl",
-                out_path.display(),
-                file_contents.0,
-                file_string.filename
-            );
-            let mut file = File::create(&file_path)
-                .with_context(|| format!("Could not open file at {file_path}. Most likely because the directory `{}` does not exist", out_path.display()))?;
+                    file.write_all(file_string.file.as_bytes())
+                        .with_context(|| format!("Could not write to file {file_path}"))?;
+                    files_created_count += 1
+                }
+            }
+        }
+        Grouping::Path => {
+            for file_contents in hurl_files {
+                let dir_path = format!("{}/{}", out_path.display(), file_contents.0.clone());
 
-            file.write_all(file_string.file.as_bytes())
-                .with_context(|| format!("Could not write to file at {file_path}"))?;
-            files_created_count += 1
+                fs::create_dir_all(&dir_path)
+                    .with_context(|| format!("couldn't create directory: {dir_path}"))?;
+
+                for file_string in file_contents.1 {
+                    let file_path = format!(
+                        "{}/{}/{}.hurl",
+                        out_path.display(),
+                        file_contents.0,
+                        file_string.filename
+                    );
+                    let mut file = File::create(&file_path)
+                        .with_context(|| format!("Could create file {file_path}."))?;
+
+                    file.write_all(file_string.file.as_bytes())
+                        .with_context(|| format!("Could not write to file {file_path}"))?;
+                    files_created_count += 1
+                }
+            }
         }
     }
 
