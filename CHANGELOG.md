@@ -1,3 +1,52 @@
+# [1.0.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.4.0...v1.0.0) (2024-02-23)
+
+
+### Bug Fixes
+
+* Ensure a valid enum is always selected by always using the first ([7af0e88](https://github.com/ethancarlsson/openapi-to-hurl/commit/7af0e88f646e6bf21e12b3f1975f3134b256ddbf))
+
+
+### Code Refactoring
+
+* Change and rename cli arguments ([2905870](https://github.com/ethancarlsson/openapi-to-hurl/commit/2905870dc5b79e34e7f2536123a0db9844e6a893))
+* Remove 200 validation and rename validation options ([5569739](https://github.com/ethancarlsson/openapi-to-hurl/commit/5569739bfd12c8ab96631cbebb6b51af2d121078))
+
+
+### Features
+
+* `header-vars` can now be used with `'r'` for short ([abfc1ac](https://github.com/ethancarlsson/openapi-to-hurl/commit/abfc1ac37ad514d1c50ad21fff8f7010227c4fc3))
+* Accept stdin as input to the program when used in pipeline ([a042c73](https://github.com/ethancarlsson/openapi-to-hurl/commit/a042c731534283b4e3d755cf8e8f1e6ca972567b))
+* Add a `required` option to the `query-params` argument ([3f12146](https://github.com/ethancarlsson/openapi-to-hurl/commit/3f121465789bf4fd03db62582d613bc504f94fb0))
+* Add ability to generate files in a flat directory structure ([2273525](https://github.com/ethancarlsson/openapi-to-hurl/commit/2273525b0c21fe7602dd7edacec79900934d78b5))
+* Adds a --version command to get the current version ([b1ad2c8](https://github.com/ethancarlsson/openapi-to-hurl/commit/b1ad2c8ecc2c2fa19feda3cee446b5ab413482bb))
+* Automatically output to directory if the directory argument is provided ([954cbeb](https://github.com/ethancarlsson/openapi-to-hurl/commit/954cbeb9226c33c9ec8f4977b928c19adec8dca1))
+
+
+### Performance Improvements
+
+* Introduce benchmarking for other scenarios ([de400c3](https://github.com/ethancarlsson/openapi-to-hurl/commit/de400c3aa29c02028442e4c17f257021f1f95a1f))
+
+
+### BREAKING CHANGES
+
+* Hurl files will now be generated in a flat directory structure. To use the
+previous structure, which grouped operations in directories by path, use the option
+`--grouping path`.
+* `required` is now the default option to `query-params`. This ensures that
+the hurl file will more likely be correct but minimal by default.
+* A number of arguments and options have been renamed.
+- `select-operation-id` -> `operation-id`
+- `variables-update-strategy` -> `variables-file-update`
+- `handle-errors` -> `error-handling`
+* The option `validate-response` has been renamed to `validation` the options
+for `validation` are: `none`, `non-error-code`, `body`, `body-with-optionals`
+* The `output-to` has been removed. Using the argument will result in an error
+* The program will now default to returning results to stdout.
+This is so that we "[e]xpect the output of every program to become the input to another, as yet unknown, program"
+Also, the primary argument name changed from "path" to "input".
+
+
+
 # [0.4.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.3.0...v0.4.0) (2024-02-18)
 
 
@@ -42,21 +91,6 @@
 ### Bug Fixes
 
 * Change `plain-text` to `text` for `content-type` option ([bc59e9b](https://github.com/ethancarlsson/openapi-to-hurl/commit/bc59e9b40804c0215ab7b1cea0cd9976eb427763))
-
-
-
-# [0.2.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.1.0...v0.2.0) (2024-01-29)
-
-
-### Bug Fixes
-
-* Give more detail in error messages ([33cc1f9](https://github.com/ethancarlsson/openapi-to-hurl/commit/33cc1f98c59d83a3a64fcd2d6bb1880b4a838100))
-
-
-### Features
-
-* Add `--content-type <CONTENT_TYPE>` for content type selection ([5a21403](https://github.com/ethancarlsson/openapi-to-hurl/commit/5a214033c563e2cb5fa0d8690fe12c4a37396dc1))
-* Allow user to specify `--formatting no-formatting` ([1a1bced](https://github.com/ethancarlsson/openapi-to-hurl/commit/1a1bcedcb54801f5853953c4f535eb9147f5e224))
 
 
 

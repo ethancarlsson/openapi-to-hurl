@@ -1,0 +1,478 @@
+<!-- Creator     : groff version 1.22.4 -->
+<!-- CreationDate: Fri Feb 23 20:18:49 2024 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>openapi-to-hurl</title>
+
+</head>
+<body>
+
+<h1 align="center">openapi-to-hurl</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#OPTIONS">OPTIONS</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em">openapi-to-hurl
+- Generate hurl files from an Open API 3 specification</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>openapi-to-hurl</b>
+[<b>-o</b>|<b>--out-dir</b>] [<b>-n</b>|<b>--validation</b>]
+[<b>-r</b>|<b>--header-vars</b>]
+[<b>-q</b>|<b>--query-params</b>]
+[<b>-i</b>|<b>--operation-id</b>] [<b>-t</b>|<b>--tag</b>]
+[<b>--variables-file-update</b>] [<b>--formatting</b>]
+[<b>--content-type</b>] [<b>-l</b>|<b>--log-level</b>]
+[<b>--quiet</b>] [<b>--error-handling</b>]
+[<b>--grouping</b>] [<b>-v</b>|<b>--version</b>]
+[<b>-h</b>|<b>--help</b>] [<i>INPUT</i>]</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Generate hurl
+files from an Open API 3 specification</p>
+
+<h2>OPTIONS
+<a name="OPTIONS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>-o</b>,
+<b>--out-dir</b>=<i>OUT_DIR</i></p>
+
+<p style="margin-left:22%;">If the &rsquo;out-dir&rsquo;
+argument is provided the output will go to a series of
+directories and files instead of stdout. Note: if now
+&rsquo;out-dir&rsquo; is given, no variables file will be
+created</p>
+
+<p style="margin-left:11%;"><b>-n</b>,
+<b>--validation</b>=<i>VALIDATION</i> [default: none]</p>
+
+<p style="margin-left:22%;">This option indicates how the
+response should be validated</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>none: No validation</p></td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>non-error-code: Validates the result is any status code
+less than 400</p></td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>body: Validates the structure and types of the response
+body. Note: This tool will not produce response validation
+for union types (nullable, oneOf, not required, etc)</p></td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>body-with-optionals: Validates the response body and
+treats all properties in the response body as if they are
+required</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>-r</b>,
+<b>--header-vars</b>=<i>HEADER_VARS</i></p>
+
+<p style="margin-left:22%;">Variables will be added to the
+hurl variables file and the header of each request. Format:
+&rsquo;HEADER_KEY=HEADER_VALUE&rsquo;</p>
+
+<p style="margin-left:11%;"><b>-q</b>,
+<b>--query-params</b>=<i>QUERY_PARAMS</i> [default:
+required]</p>
+
+<p style="margin-left:22%;">Choose whether, and how to,
+pass query params</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="62%">
+
+
+<p>none: No query params</p></td>
+<td width="3%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="62%">
+
+
+<p>required: Only the required query params</p></td>
+<td width="3%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="62%">
+
+
+<p>all: Sets a value for all query params</p></td>
+<td width="3%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>-i</b>,
+<b>--operation-id</b>=<i>OPERATION_ID</i></p>
+
+<p style="margin-left:22%;">Generate only the operations
+identified with this options, e.g. &rsquo;openapi-to-hurl
+openapi.json -i getProducts -i createProduct&rsquo;</p>
+
+<p style="margin-left:11%;"><b>-t</b>,
+<b>--tag</b>=<i>TAG</i></p>
+
+<p style="margin-left:22%;">Generate only the operations
+under the given tags, e.g. &rsquo;openapi-to-hurl
+openapi.json -t orders -t products&rsquo;. If used with the
+&rsquo;operation-id&rsquo; option the generated files will
+first be narrowed by tag then by operationId</p>
+
+
+<p style="margin-left:11%;"><b>--variables-file-update</b>=<i>VARIABLES_FILE_UPDATE</i>
+[default: merge]</p>
+
+<p style="margin-left:22%;">How the variables file should
+be updated</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>overwrite: Overwrites the entire variables file with new
+variables</p> </td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>merge: Merges new variables with old variables</p></td></tr>
+</table>
+
+
+<p style="margin-left:11%;"><b>--formatting</b>=<i>FORMATTING</i>
+[default: request-bodies]</p>
+
+<p style="margin-left:22%;">How the output should be
+formatted</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>no-formatting: Will not add any characters to the output
+that do not affect syntax</p></td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>request-bodies: Will add some formatting to the request
+body</p> </td></tr>
+</table>
+
+
+<p style="margin-left:11%;"><b>--content-type</b>=<i>CONTENT_TYPE</i>
+[default: json]</p>
+
+<p style="margin-left:22%;">Desired content type of the
+request. If the selected content type is not available in
+the schema or not supported by this tool the tool will
+select the first scpecified content type supported by this
+tool. If no valid content type is found the tool will use an
+empty request body</p>
+
+<p style="margin-left:22%; margin-top: 1em">[<i>possible
+values:</i> text, json]</p>
+
+<p style="margin-left:11%;"><b>-l</b>,
+<b>--log-level</b>=<i>LOG_LEVEL</i> [default: info]</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="37%">
+
+
+<p>error: The &quot;error&quot; level</p></td>
+<td width="28%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="37%">
+
+
+<p>warn: The &quot;warn&quot; level</p></td>
+<td width="28%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="37%">
+
+
+<p>info: The &quot;info&quot; level</p></td>
+<td width="28%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="37%">
+
+
+<p>debug: The &quot;debug&quot; level</p></td>
+<td width="28%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="37%">
+
+
+<p>trace: The &quot;trace&quot; level</p></td>
+<td width="28%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>--quiet</b></p>
+
+<p style="margin-left:22%;">Set this to true to silence all
+logging</p>
+
+
+<p style="margin-left:11%;"><b>--error-handling</b>=<i>ERROR_HANDLING</i>
+[default: terminate]</p>
+
+<p style="margin-left:22%;">How to handle recoverable
+errors</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>log: Log the error to stderr but continue processing.
+Note that the program will still terminate if the error is
+unrecoverable, e.g. the input isn't a valid Open API
+Specification</p> </td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>terminate: Terminate the program on any errors found
+with the specification</p></td></tr>
+</table>
+
+
+<p style="margin-left:11%;"><b>--grouping</b>=<i>GROUPING</i>
+[default: flat]</p>
+
+<p style="margin-left:22%;">How the operations will be
+grouped into directories. Has no effect if no
+&rsquo;--out-dir&rsquo; argument is provided</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>flat: Flat grouping will group all operations
+together</p> </td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>path: Path grouping will group all operations by their
+uri path, with a directory per path</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>-v</b>, <b>--version <br>
+-h</b>, <b>--help</b></p>
+
+<p style="margin-left:22%;">Print help (see a summary with
+'-h')</p>
+
+<p style="margin-left:11%;">[<i>INPUT</i>]</p>
+
+<p style="margin-left:22%;">Input can be either a path to
+the specification or the result of stdin if used in a
+pipeline</p>
+<hr>
+</body>
+</html>
