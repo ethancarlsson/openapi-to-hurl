@@ -8,7 +8,7 @@ description = "A tool to create Hurl files (https://hurl.dev/) from openapi spec
 readme = "README.md"
 homepage = "https://github.com/ethancarlsson/openapi-to-hurl"
 repository = "https://github.com/ethancarlsson/openapi-to-hurl"
-keywords = ["cli", "openapi", "hurl", "generate", "test", "swagger"]
+keywords = ["cli", "openapi", "hurl", "test", "swagger"]
 categories = ["command-line-utilities"]
 
 [dependencies]
