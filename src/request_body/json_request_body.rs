@@ -21,6 +21,11 @@ pub fn parse_json_from_schema(
         None => (),
     }
 
+    match schema.enum_values.first() {
+        Some(e) => return Ok(Some(serde_json::Value::String(e.to_string()))),
+        None => (),
+    }
+
     if schema.all_of.len() > 0 {
         return Ok(Some(json_obj_from_allof(schema, spec, settings)?));
     }
