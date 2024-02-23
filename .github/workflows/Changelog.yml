@@ -34,7 +34,7 @@ jobs:
           command: build
           args: --release
       - name: Generate HTML man documentation
-        run: sudo apt install groff && groff -mandoc -Thtml docs/openapi-to-hurl.1 > docs/man.html
+        run: sudo apt install groff && groff -mandoc -Thtml docs/openapi-to-hurl.1 > docs/index.html
       # install and cache hyperfine
       - id: cache-hyperfine
         name: Cache hyperfine
