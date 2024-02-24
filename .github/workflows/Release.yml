@@ -1,0 +1,185 @@
+# This workflow is mostly copied from https://github.com/BurntSushi/ripgrep/blob/master/.github/workflows/release.yml
+# Main difference is that I'm only building for Mac at the moment 
+name: Release
+
+# Only do the release on x.y.z tags.
+on:
+  push:
+    tags:
+    - "[0-9]+.[0-9]+.[0-9]+"
+
+# To create releases
+permissions:
+  contents: write
+
+jobs:
+  # The create-release job runs purely to initialize the GitHub release itself,
+  # and names the release after the `x.y.z` tag that was pushed. It's separate
+  # from building the release so that we only create the release once.
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the release version from the tag
+        if: env.VERSION == ''
+        run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+      - name: Show the version
+        run: |
+          echo "version is: $VERSION"
+      - name: Check that tag version and Cargo.toml version are the same
+        shell: bash
+        run: |
+          if ! grep -q "version = \"$VERSION\"" Cargo.toml; then
+            echo "version does not match Cargo.toml" >&2
+            exit 1
+          fi
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: gh release create $VERSION --draft --verify-tag --title $VERSION
+    outputs:
+      version: ${{ env.VERSION }}
+
+  build-release:
+    name: build-release
+    needs: ['create-release']
+    runs-on: ${{ matrix.os }}
+    env:
+      # For some builds, we use cross to test on 32-bit and big-endian
+      # systems.
+      CARGO: cargo
+      # When CARGO is set to CROSS, TARGET_DIR includes matrix.target.
+      TARGET_DIR: ./target
+      # Bump this as appropriate. We pin to a version to make sure CI
+      # continues to work as cross releases in the past have broken things
+      # in subtle ways.
+      CROSS_VERSION: v0.2.5
+      # Emit backtraces on panics.
+      RUST_BACKTRACE: 1
+      # Build static releases with PCRE2.
+      PCRE2_SYS_STATIC: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - build: macos
+          os: macos-latest
+          rust: nightly
+          target: x86_64-apple-darwin
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        target: ${{ matrix.target }}
+
+    - name: Set target variables
+      shell: bash
+      run: |
+        echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
+        echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
+
+    - name: Show command used for Cargo
+      shell: bash
+      run: |
+        echo "cargo command is: ${{ env.CARGO }}"
+        echo "target flag is: ${{ env.TARGET_FLAGS }}"
+        echo "target dir is: ${{ env.TARGET_DIR }}"
+
+    - name: Build release binary
+      shell: bash
+      run: |
+        ${{ env.CARGO }} build --verbose --release --features pcre2 ${{ env.TARGET_FLAGS }}
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          bin="target/${{ matrix.target }}/release/openapi-to-hurl.exe"
+        else
+          bin="target/${{ matrix.target }}/release/openapi-to-hurl"
+        fi
+        echo "BIN=$bin" >> $GITHUB_ENV
+
+    - name: Strip release binary (macos)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: strip "$BIN"
+
+    - name: Determine archive name
+      shell: bash
+      run: |
+        version="${{ needs.create-release.outputs.version }}"
+        echo "ARCHIVE=openapi-to-hurl-$version-${{ matrix.target }}" >> $GITHUB_ENV
+
+    - name: Creating directory for archive
+      shell: bash
+      run: |
+        mkdir -p "$ARCHIVE"/{complete,doc}
+        cp "$BIN" "$ARCHIVE"/
+        cp {README.md,COPYING,UNLICENSE,LICENSE-MIT} "$ARCHIVE"/
+        cp {CHANGELOG.md,FAQ.md,GUIDE.md} "$ARCHIVE"/doc/
+
+    - name: Generate man page and completions (no emulation)
+      # if: matrix.qemu == ''
+      shell: bash
+      run: |
+        "$BIN" --version
+        # "$BIN" --generate complete-bash > "$ARCHIVE/complete/openapi-to-hurl.bash"
+        # "$BIN" --generate complete-fish > "$ARCHIVE/complete/openapi-to-hurl.fish"
+        # "$BIN" --generate complete-powershell > "$ARCHIVE/complete/_openapi-to-hurl.ps1"
+        # "$BIN" --generate complete-zsh > "$ARCHIVE/complete/_openapi-to-hurl"
+        ./docs/openapi-to-hurl.1 > "$ARCHIVE/doc/openapi-to-hurl.1"
+
+    # - name: Generate man page and completions (emulation)
+    #   if: matrix.qemu != ''
+    #   shell: bash
+    #   run: |
+    #     docker run --rm -v \
+    #       "$PWD/target:/target:Z" \
+    #       "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+    #       "${{ matrix.qemu }}" "/$BIN" --version
+    #     docker run --rm -v \
+    #       "$PWD/target:/target:Z" \
+    #       "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+    #       "${{ matrix.qemu }}" "/$BIN" \
+    #         --generate complete-bash > "$ARCHIVE/complete/openapi-to-hurl.bash"
+    #     docker run --rm -v \
+    #       "$PWD/target:/target:Z" \
+    #       "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+    #       "${{ matrix.qemu }}" "/$BIN" \
+    #         --generate complete-fish > "$ARCHIVE/complete/openapi-to-hurl.fish"
+    #     docker run --rm -v \
+    #       "$PWD/target:/target:Z" \
+    #       "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+    #       "${{ matrix.qemu }}" "/$BIN" \
+    #         --generate complete-powershell > "$ARCHIVE/complete/_openapi-to-hurl.ps1"
+    #     docker run --rm -v \
+    #       "$PWD/target:/target:Z" \
+    #       "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+    #       "${{ matrix.qemu }}" "/$BIN" \
+    #         --generate complete-zsh > "$ARCHIVE/complete/_openapi-to-hurl"
+    #     docker run --rm -v \
+    #       "$PWD/target:/target:Z" \
+    #       "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+    #       "${{ matrix.qemu }}" "/$BIN" \
+    #         --generate man > "$ARCHIVE/doc/openapi-to-hurl.1"
+
+    - name: Build archive (Unix)
+      shell: bash
+      if: matrix.os != 'windows-latest'
+      run: |
+        tar czf "$ARCHIVE.tar.gz" "$ARCHIVE"
+        shasum -a 256 "$ARCHIVE.tar.gz" > "$ARCHIVE.tar.gz.sha256"
+        echo "ASSET=$ARCHIVE.tar.gz" >> $GITHUB_ENV
+        echo "ASSET_SUM=$ARCHIVE.tar.gz.sha256" >> $GITHUB_ENV
+
+    - name: Upload release archive
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      shell: bash
+      run: |
+        version="${{ needs.create-release.outputs.version }}"
+        gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
+
