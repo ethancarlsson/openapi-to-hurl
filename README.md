@@ -4,10 +4,16 @@ A tool to create Hurl files (https://hurl.dev/) from Open API specifications.
 
 ## Installation
 
-You can install the tool with cargo if you have it on your system.
+### Cargo
 ```sh
 cargo install openapi-to-hurl
 ```
+### Brew
+```sh
+brew tap ethancarlsson/openapi-to-hurl
+brew install openapi-to-hurl
+```
+
 ### Usage
 openapi-to-hurl accepts the path to an Open API 3 specification, produces hurl
 requests and writes them to stdout.
