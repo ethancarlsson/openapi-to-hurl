@@ -54,7 +54,7 @@ You can then start running these files with hurl via the CLI.
 ```sh
 % hurl test_hurl_files/*.hurl --variables-file=test_hurl_files/petstore.swagger.io_v1
 ```
-Or you can explore it using a plugin an editor plugin for [Neovim](https://github.com/ethancarlsson/nvim-hurl.nvim)
+Or you can explore it using a plugin an editor plugin for [Neovim](https://github.com/jellydn/hurl.nvim)
 or [VSCode](https://github.com/pfeiferj/vscode-hurl)
 
 
