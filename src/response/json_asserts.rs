@@ -413,7 +413,7 @@ mod tests {
     use crate::{
         hurl_files::single_space,
         response::{
-            common_asserts::{assert_query_matches_predicate, assert_status_less_than},
+            common_asserts::{assert_query_matches_predicate, assert_status_equal},
             json_asserts::simple_template,
             response_validation::HandleUnionsBy,
         },
@@ -427,10 +427,11 @@ mod tests {
         schema.schema_type = None;
         let result = parse_json_response_body_asserts(
             schema,
+            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
-        let expected: Vec<Assert> = vec![assert_status_less_than(400)];
+        let expected: Vec<Assert> = vec![assert_status_equal(200)];
 
         assert_eq!(Ok(expected), result);
     }
@@ -441,12 +442,13 @@ mod tests {
         schema.schema_type = Some(oas3::spec::SchemaType::Boolean);
         let result = parse_json_response_body_asserts(
             schema,
+            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
 
         let expected: Vec<Assert> = vec![
-            assert_status_less_than(400),
+            assert_status_equal(200),
             assert_query_matches_predicate(
                 &hurl_core::ast::QueryValue::Jsonpath {
                     space0: single_space(),
@@ -472,12 +474,13 @@ mod tests {
 
         let result = parse_json_response_body_asserts(
             schema,
+            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
 
         let expected: Vec<Assert> = vec![
-            assert_status_less_than(400),
+            assert_status_equal(200),
             assert_query_matches_predicate(
                 &hurl_core::ast::QueryValue::Jsonpath {
                     space0: single_space(),
@@ -535,12 +538,13 @@ mod tests {
 
         let result = parse_json_response_body_asserts(
             schema,
+            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
 
         let expected: Vec<Assert> = vec![
-            assert_status_less_than(400),
+            assert_status_equal(200),
             assert_query_matches_predicate(
                 &hurl_core::ast::QueryValue::Jsonpath {
                     space0: single_space(),
