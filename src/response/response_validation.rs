@@ -1,5 +1,5 @@
 use super::json_asserts::parse_json_response_body_asserts;
-use crate::response::common_asserts::{assert_status_less_than, parse_string_asserts};
+use crate::response::common_asserts::{assert_status_less_than, parse_string_asserts, assert_status_equal};
 use std::vec;
 
 use hurl_core::ast::{
@@ -45,8 +45,15 @@ pub fn validation_response_full(
         .operation_id
         .clone()
         .unwrap_or("operationWithNoId".to_string());
+        
+    let status_code: i64 = match operation.responses.iter().find(|kv| kv.0.parse::<i64>().unwrap() < 400) {
+        Some(r) => r.0.parse().unwrap(),
+        None => {
+            return Ok(Some(validate_response_not_error()));
+        }
+    };
 
-    let response = match operation.responses.iter().find(|kv| kv.0 == "200") {
+    let response = match operation.responses.iter().find(|kv| kv.0.parse::<i64>().unwrap() < 400) {
         Some(r) => r.1.resolve(spec)?,
         None => return Ok(Some(validate_response_not_error())),
     };
@@ -91,7 +98,7 @@ pub fn validation_response_full(
             line_terminators: vec![],
             space0: empty_space(),
             line_terminator0: newline(),
-            value: hurl_core::ast::SectionValue::Asserts(parse_plain_text_response_body(schema)?),
+            value: hurl_core::ast::SectionValue::Asserts(parse_plain_text_response_body(schema, status_code)?),
             source_info: empty_source_info(),
         }]))),
         ContentType::Json => Ok(Some(response_structure(vec![Section {
@@ -99,17 +106,17 @@ pub fn validation_response_full(
             space0: empty_space(),
             line_terminator0: newline(),
             value: hurl_core::ast::SectionValue::Asserts(parse_json_response_body_asserts(
-                schema, &spec, handle_unions_by
+                schema, status_code, &spec, handle_unions_by
             )?),
             source_info: empty_source_info(),
         }]))),
     }
 }
 
-fn parse_plain_text_response_body(schema: Schema) -> Result<Vec<Assert>, RefError> {
+fn parse_plain_text_response_body(schema: Schema, status_code: i64) -> Result<Vec<Assert>, RefError> {
     trace!("parsing plain text request body");
     let asserts = vec![
-        vec![assert_status_less_than(400)],
+        vec![assert_status_equal(status_code)],
         parse_string_asserts(schema, &hurl_core::ast::QueryValue::Body),
     ]
     .concat();

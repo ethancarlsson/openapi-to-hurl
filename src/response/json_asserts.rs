@@ -11,7 +11,7 @@ use crate::{
 
 use super::{
     common_asserts::{
-        assert_query_matches_predicate_with_filters, assert_status_less_than, parse_string_asserts,
+        assert_query_matches_predicate_with_filters, parse_string_asserts, assert_status_equal
     },
     response_validation::HandleUnionsBy,
 };
@@ -382,11 +382,12 @@ fn predicate_integer_number(n: serde_json::Number) -> PredicateValue {
 
 pub fn parse_json_response_body_asserts(
     schema: Schema,
+    status_code: i64,
     spec: &Spec,
     handle_unions_by: HandleUnionsBy,
 ) -> Result<Vec<Assert>, RefError> {
     Ok(SchemaToJsonAssertBuilder::new(
-        &mut vec![assert_status_less_than(400)],
+        &mut vec![assert_status_equal(status_code)],
         spec,
         &handle_unions_by,
     )

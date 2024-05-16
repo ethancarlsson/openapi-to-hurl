@@ -162,6 +162,17 @@ pub fn assert_status_less_than(num: i64) -> Assert {
     )
 }
 
+pub fn assert_status_equal(num: i64) -> Assert {
+    assert_query_matches_predicate(
+        &hurl_core::ast::QueryValue::Status,
+        PredicateFuncValue::Equal {
+            space0: single_space(),
+            value: hurl_core::ast::PredicateValue::Number(hurl_core::ast::Number::Integer(num)),
+            operator: true,
+        },
+    )
+}
+
 fn single_space() -> Whitespace {
     Whitespace {
         value: " ".to_string(),
