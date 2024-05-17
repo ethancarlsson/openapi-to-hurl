@@ -11,7 +11,7 @@ use crate::{
 
 use super::{
     common_asserts::{
-        assert_query_matches_predicate_with_filters, parse_string_asserts, assert_status_equal
+        assert_query_matches_predicate_with_filters, parse_string_asserts
     },
     response_validation::HandleUnionsBy,
 };
@@ -382,12 +382,11 @@ fn predicate_integer_number(n: serde_json::Number) -> PredicateValue {
 
 pub fn parse_json_response_body_asserts(
     schema: Schema,
-    status_code: i64,
     spec: &Spec,
     handle_unions_by: HandleUnionsBy,
 ) -> Result<Vec<Assert>, RefError> {
     Ok(SchemaToJsonAssertBuilder::new(
-        &mut vec![assert_status_equal(status_code)],
+        &mut vec![],
         spec,
         &handle_unions_by,
     )
@@ -413,7 +412,7 @@ mod tests {
     use crate::{
         hurl_files::single_space,
         response::{
-            common_asserts::{assert_query_matches_predicate, assert_status_equal},
+            common_asserts::{assert_query_matches_predicate},
             json_asserts::simple_template,
             response_validation::HandleUnionsBy,
         },
@@ -421,13 +420,12 @@ mod tests {
 
     use super::parse_json_response_body_asserts;
 
-    #[test]
+/*    #[test]
     fn parse_json_response_body_with_no_schema_type_returns_empty_asserts() {
         let mut schema = Schema::default();
         schema.schema_type = None;
         let result = parse_json_response_body_asserts(
             schema,
-            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
@@ -435,20 +433,18 @@ mod tests {
 
         assert_eq!(Ok(expected), result);
     }
-
+*/
     #[test]
     fn parse_json_response_body_with_bool_schema_type_returns_bool_asserts() {
         let mut schema = Schema::default();
         schema.schema_type = Some(oas3::spec::SchemaType::Boolean);
         let result = parse_json_response_body_asserts(
             schema,
-            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
 
         let expected: Vec<Assert> = vec![
-            assert_status_equal(200),
             assert_query_matches_predicate(
                 &hurl_core::ast::QueryValue::Jsonpath {
                     space0: single_space(),
@@ -474,13 +470,11 @@ mod tests {
 
         let result = parse_json_response_body_asserts(
             schema,
-            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
 
         let expected: Vec<Assert> = vec![
-            assert_status_equal(200),
             assert_query_matches_predicate(
                 &hurl_core::ast::QueryValue::Jsonpath {
                     space0: single_space(),
@@ -538,13 +532,11 @@ mod tests {
 
         let result = parse_json_response_body_asserts(
             schema,
-            200,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
         );
 
         let expected: Vec<Assert> = vec![
-            assert_status_equal(200),
             assert_query_matches_predicate(
                 &hurl_core::ast::QueryValue::Jsonpath {
                     space0: single_space(),

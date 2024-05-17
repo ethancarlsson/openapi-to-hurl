@@ -460,7 +460,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP *\n[Asserts]\n\nstatus == 200\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert max length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
+                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP 200\n[Asserts]\n\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert max length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];
@@ -489,9 +489,9 @@ mod tests {
             vec![HurlFileString {
                 file: "POST {{host}}/pets\n```json\n".to_string()
                     + &serde_json::to_string_pretty(&get_add_pet_request_body()).unwrap()
-                    + "\n```\n\nHTTP *"
+                    + "\n```\n\nHTTP 200"
                     + "\n[Asserts]"
-                    + "\n\nstatus == 200"
+                    + "\n"
                     + "\njsonpath \"$\" isCollection"
                     + "\njsonpath \"$.id\" isInteger"
                     + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
@@ -524,9 +524,9 @@ mod tests {
             vec![HurlFileString {
                 file: "POST {{host}}/pets\n```json\n".to_string()
                     + &serde_json::to_string_pretty(&get_add_pet_request_body()).unwrap()
-                    + "\n```\n\nHTTP *"
+                    + "\n```\n\nHTTP 200"
                     + "\n[Asserts]"
-                    + "\n\nstatus == 200"
+                    + "\n"
                     + "\njsonpath \"$\" isCollection"
                     + "\njsonpath \"$.id\" isInteger"
                     + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
