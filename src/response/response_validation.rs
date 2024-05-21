@@ -3,7 +3,7 @@ use crate::response::common_asserts::{assert_status_less_than, parse_string_asse
 use std::vec;
 
 use hurl_core::ast::{
-    Assert, LineTerminator, Response, Section, Status, Version, VersionValue, Whitespace,
+    Assert, LineTerminator, Response, Section, Status, Version, VersionValue, Whitespace, StatusValue,
 };
 use log::{trace, warn};
 use oas3::{
@@ -22,7 +22,7 @@ pub enum HandleUnionsBy {
 }
 
 pub fn validate_response_not_error() -> Response {
-    response_structure(vec![Section {
+    response_structure_failure(vec![Section {
         line_terminators: vec![],
         space0: empty_space(),
         line_terminator0: LineTerminator {
@@ -45,8 +45,13 @@ pub fn validation_response_full(
         .operation_id
         .clone()
         .unwrap_or("operationWithNoId".to_string());
+        
+    let status_code: StatusValue = match operation.responses.iter().find(|kv| kv.0.parse::<i64>().unwrap() < 400) {
+        Some(r) => StatusValue::Specific(r.0.parse::<u64>().unwrap()),
+        None => return Ok(Some(validate_response_not_error())),
+    };
 
-    let response = match operation.responses.iter().find(|kv| kv.0 == "200") {
+    let response = match operation.responses.iter().find(|kv| kv.0.parse::<i64>().unwrap() < 400) {
         Some(r) => r.1.resolve(spec)?,
         None => return Ok(Some(validate_response_not_error())),
     };
@@ -93,7 +98,7 @@ pub fn validation_response_full(
             line_terminator0: newline(),
             value: hurl_core::ast::SectionValue::Asserts(parse_plain_text_response_body(schema)?),
             source_info: empty_source_info(),
-        }]))),
+        }], status_code)),),
         ContentType::Json => Ok(Some(response_structure(vec![Section {
             line_terminators: vec![],
             space0: empty_space(),
@@ -102,14 +107,13 @@ pub fn validation_response_full(
                 schema, &spec, handle_unions_by
             )?),
             source_info: empty_source_info(),
-        }]))),
+        }], status_code))),
     }
 }
 
 fn parse_plain_text_response_body(schema: Schema) -> Result<Vec<Assert>, RefError> {
     trace!("parsing plain text request body");
     let asserts = vec![
-        vec![assert_status_less_than(400)],
         parse_string_asserts(schema, &hurl_core::ast::QueryValue::Body),
     ]
     .concat();
@@ -124,7 +128,7 @@ fn single_space() -> Whitespace {
     }
 }
 
-fn response_structure(sections: Vec<Section>) -> Response {
+fn response_structure(sections: Vec<Section>, status_code: StatusValue) -> Response {
     Response {
         line_terminators: vec![newline()],
         version: Version {
@@ -133,7 +137,28 @@ fn response_structure(sections: Vec<Section>) -> Response {
         },
         space0: empty_space(),
         status: Status {
-            value: hurl_core::ast::StatusValue::Any,
+            value: status_code,
+            source_info: empty_source_info(),
+        },
+        space1: single_space(),
+        line_terminator0: newline(),
+        headers: vec![],
+        sections,
+        body: None,
+        source_info: empty_source_info(),
+    }
+}
+
+fn response_structure_failure(sections: Vec<Section>) -> Response {
+    Response {
+        line_terminators: vec![newline()],
+        version: Version {
+            value: VersionValue::VersionAny,
+            source_info: empty_source_info(),
+        },
+        space0: empty_space(),
+        status: Status {
+            value: StatusValue::Any,
             source_info: empty_source_info(),
         },
         space1: single_space(),
