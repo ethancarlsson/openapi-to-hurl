@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.0.0...v1.0.1) (2024-07-08)
+
+
+### Bug Fixes
+
+* Allow http status codes other than 200 ([0e404d6](https://github.com/ethancarlsson/openapi-to-hurl/commit/0e404d64c39a07e732df68dbd9f95ee30fd17a36))
+
+
+
 # [1.0.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.4.0...v1.0.0) (2024-02-23)
 
 
@@ -82,15 +91,6 @@ Also, the primary argument name changed from "path" to "input".
 ### Bug Fixes
 
 * Add a delimiter to multiline strings ([f70b00e](https://github.com/ethancarlsson/openapi-to-hurl/commit/f70b00e118ff46ef2bf2d65d3111bca4b04fdc41))
-
-
-
-## [0.2.1](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.0...v0.2.1) (2024-01-29)
-
-
-### Bug Fixes
-
-* Change `plain-text` to `text` for `content-type` option ([bc59e9b](https://github.com/ethancarlsson/openapi-to-hurl/commit/bc59e9b40804c0215ab7b1cea0cd9976eb427763))
 
 
 
