@@ -384,20 +384,25 @@ pub fn parse_json_response_body_asserts(
     schema: Schema,
     spec: &Spec,
     handle_unions_by: HandleUnionsBy,
+    should_validate_less_than_400: bool,
 ) -> Result<Vec<Assert>, RefError> {
-    Ok(SchemaToJsonAssertBuilder::new(
-        &mut vec![assert_status_less_than(400)],
-        spec,
-        &handle_unions_by,
+    let mut asserts = vec![];
+
+    if should_validate_less_than_400 {
+        asserts.push(assert_status_less_than(400))
+    }
+
+    Ok(
+        SchemaToJsonAssertBuilder::new(&mut asserts, spec, &handle_unions_by)
+            .add_asserts_from_schema(
+                schema,
+                &hurl_core::ast::QueryValue::Jsonpath {
+                    space0: single_space(),
+                    expr: simple_template("$".to_string()),
+                },
+            )?
+            .get_asserts(),
     )
-    .add_asserts_from_schema(
-        schema,
-        &hurl_core::ast::QueryValue::Jsonpath {
-            space0: single_space(),
-            expr: simple_template("$".to_string()),
-        },
-    )?
-    .get_asserts())
 }
 
 #[cfg(test)]
@@ -428,6 +433,7 @@ mod tests {
             schema,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
+            true,
         );
         let expected: Vec<Assert> = vec![assert_status_less_than(400)];
 
@@ -442,6 +448,7 @@ mod tests {
             schema,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
+            true,
         );
 
         let expected: Vec<Assert> = vec![
@@ -473,6 +480,7 @@ mod tests {
             schema,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
+            true,
         );
 
         let expected: Vec<Assert> = vec![
@@ -536,6 +544,7 @@ mod tests {
             schema,
             &Spec::default(),
             HandleUnionsBy::IgnoringThem,
+            true,
         );
 
         let expected: Vec<Assert> = vec![

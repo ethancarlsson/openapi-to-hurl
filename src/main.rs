@@ -94,11 +94,7 @@ fn out_to_files(
         Grouping::Flat => {
             for file_contents in hurl_files {
                 for file_string in file_contents.1 {
-                    let file_path = format!(
-                        "{}/{}.hurl",
-                        out_path.display(),
-                        file_string.filename
-                    );
+                    let file_path = format!("{}/{}.hurl", out_path.display(), file_string.filename);
                     let mut file = File::create(&file_path)
                         .with_context(|| format!("Could create file {file_path}."))?;
 
@@ -290,10 +286,16 @@ mod tests {
             ),
             (
                 "_pets_{petId}".to_string(),
-                vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n".to_string(),
-                    filename: "showPetById".to_string(),
-                }],
+                vec![
+                    HurlFileString {
+                        file: "GET {{host}}/pets/string_value\n".to_string(),
+                        filename: "showPetById".to_string(),
+                    },
+                    HurlFileString {
+                        file: "POST {{host}}/pets/string_value\n".to_string(),
+                        filename: "createPetById".to_string(),
+                    },
+                ],
             ),
         ];
         assert_eq!(expected, result.unwrap());
@@ -683,6 +685,60 @@ mod tests {
                 }],
             ),
         ];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_with_no_expected_status_code() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                input: Some(spec_path),
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["createPetById".to_string()]),
+                validate_response: ResponseValidationChoice::Body,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets_{petId}".to_string(),
+            vec![HurlFileString {
+                file: "POST {{host}}/pets/string_value\n\nHTTP *\n[Asserts]\n\njsonpath \"$\" isCollection\njsonpath \"$.code\" isInteger\njsonpath \"$.message\" isString".to_string(),
+                filename: "createPetById".to_string(),
+            }],
+        )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_with_no_expected_status_code_plain_text() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                input: Some(spec_path),
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["createPetById".to_string()]),
+                validate_response: ResponseValidationChoice::Body,
+                content_type: ContentType::Text,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets_{petId}".to_string(),
+            vec![HurlFileString {
+                file: "POST {{host}}/pets/string_value\n\nHTTP *\n[Asserts]\n\nbody isString"
+                    .to_string(),
+                filename: "createPetById".to_string(),
+            }],
+        )];
         assert_eq!(expected, result.unwrap());
     }
 

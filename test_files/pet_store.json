@@ -98,7 +98,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful operation",
             "content": {
               "application/xml": {
@@ -182,6 +182,42 @@
       }
     },
     "/pets/{petId}": {
+      "post": {
+        "summary": "Create with ID (not implemented)",
+        "operationId": "createPetById",
+        "tags": [
+          "pets"
+        ],
+        "parameters": [
+          {
+            "name": "petId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the pet to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "Not implemented error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Not implemented"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "summary": "Info for a specific pet",
         "operationId": "showPetById",

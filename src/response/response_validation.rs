@@ -46,9 +46,21 @@ pub fn validation_response_full(
         .clone()
         .unwrap_or("operationWithNoId".to_string());
 
-    let response = match operation.responses.iter().find(|kv| kv.0 == "200") {
-        Some(r) => r.1.resolve(spec)?,
-        None => return Ok(Some(validate_response_not_error())),
+    let mut has_code_less_than_400 = false;
+
+    let response = match operation
+        .responses
+        .iter()
+        .find(|kv| kv.0.chars().nth(0).unwrap_or('6').to_digit(10).unwrap_or(6) < 4)
+    {
+        Some(r) => {
+            has_code_less_than_400 = true;
+            r.1.resolve(spec)?
+        }
+        None => match operation.responses.iter().nth(0) {
+            Some(r) => r.1.resolve(spec)?,
+            None => return Ok(None),
+        },
     };
 
     let content = match response
@@ -91,7 +103,10 @@ pub fn validation_response_full(
             line_terminators: vec![],
             space0: empty_space(),
             line_terminator0: newline(),
-            value: hurl_core::ast::SectionValue::Asserts(parse_plain_text_response_body(schema)?),
+            value: hurl_core::ast::SectionValue::Asserts(parse_plain_text_response_body(
+                schema,
+                has_code_less_than_400,
+            )?),
             source_info: empty_source_info(),
         }]))),
         ContentType::Json => Ok(Some(response_structure(vec![Section {
@@ -99,20 +114,31 @@ pub fn validation_response_full(
             space0: empty_space(),
             line_terminator0: newline(),
             value: hurl_core::ast::SectionValue::Asserts(parse_json_response_body_asserts(
-                schema, &spec, handle_unions_by
+                schema,
+                &spec,
+                handle_unions_by,
+                has_code_less_than_400,
             )?),
             source_info: empty_source_info(),
         }]))),
     }
 }
 
-fn parse_plain_text_response_body(schema: Schema) -> Result<Vec<Assert>, RefError> {
+fn parse_plain_text_response_body(
+    schema: Schema,
+    should_validate_less_than_400: bool,
+) -> Result<Vec<Assert>, RefError> {
     trace!("parsing plain text request body");
-    let asserts = vec![
-        vec![assert_status_less_than(400)],
-        parse_string_asserts(schema, &hurl_core::ast::QueryValue::Body),
-    ]
-    .concat();
+    let mut asserts = vec![];
+
+    if should_validate_less_than_400 {
+        asserts.push(assert_status_less_than(400))
+    }
+
+    asserts.extend(parse_string_asserts(
+        schema,
+        &hurl_core::ast::QueryValue::Body,
+    ));
 
     Ok(asserts)
 }
