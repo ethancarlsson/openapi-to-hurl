@@ -110,56 +110,6 @@ edited afterwards.
 openapi-to-hurl test_files/pet_store.json --validation body -o output/directory
 ```
 
-#### Use with Neovim
-This is a very specific use case, but it's my main use case at the moment.
-I often find I have a request like this
-
-```hurl
-# addPet.hurl
-POST {{host}}/pets
-{
-  "name": "Lola",
-  "photo_urls": [
-    "https://example.com/img.png",
-    "https://example.com/img2.png"
-  ]
-}
-```
-Then I want to do something with the response so, in the same file I change it 
-to something like this.
-
-```hurl
-# addPet.hurl
-POST {{host}}/stores/3/pets
-{
-    "pet_id": 43
-}
-```
-Now my `addPet.hurl` has the wrong request in it and the original request can be
-complicated and hard to remember. To reset the file I can now run this command 
-from within the vim buffer.
-
-```sh
-%!openapi-to-hurl test_files/pet_store.json -i addPet
-```
-To make my life easier I add functions like these to my config so that the
-operation is automatically detected from the filename.
-
-```lua
----@param spec string
----@param ... string
-function ResetHurlFile(spec, ...)
-	vim.cmd("%!openapi-to-hurl " .. spec .. " -i " .. vim.fn.expand("%:t:r") .. " " .. table.concat({ ... }, " "))
-end
-
-vim.cmd([[ command! -nargs=+ HurlReset lua ResetHurlFile(<f-args>)]])
-
-vim.cmd([[ command! -nargs=* HurlResetPetStore lua ResetHurlFile("/path/to/pet_store.json")]])
-```
-
-Then I can just run `:HurlResetPetStore` or even remap it with a couple keystrokes in 
-order to get my .hurl file back to the state I want it in.
-
 ## Limitations
 openapi-to-hurl only works with JSON and plain-text content types.
 
