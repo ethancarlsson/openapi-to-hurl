@@ -1,6 +1,6 @@
 use super::json_asserts::parse_json_response_body_asserts;
 use crate::response::common_asserts::{assert_status_less_than, parse_string_asserts};
-use std::vec;
+use std::{collections::BTreeMap, vec};
 
 use hurl_core::ast::{
     Assert, LineTerminator, Response, Section, Status, Version, VersionValue, Whitespace,
@@ -48,8 +48,9 @@ pub fn validation_response_full(
 
     let mut has_code_less_than_400 = false;
 
-    let response = match operation
-        .responses
+    let response_btree_map = &operation.clone().responses.unwrap_or(BTreeMap::new());
+
+    let response = match response_btree_map
         .iter()
         .find(|kv| kv.0.chars().nth(0).unwrap_or('6').to_digit(10).unwrap_or(6) < 4)
     {
@@ -57,9 +58,10 @@ pub fn validation_response_full(
             has_code_less_than_400 = true;
             r.1.resolve(spec)?
         }
-        None => match operation.responses.iter().nth(0) {
+        None => match response_btree_map.iter().nth(0) {
             Some(r) => r.1.resolve(spec)?,
-            None => return Ok(None),
+            None => {
+                    return Ok(None)}
         },
     };
 

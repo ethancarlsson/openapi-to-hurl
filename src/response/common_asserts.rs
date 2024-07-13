@@ -51,18 +51,11 @@ fn add_string_schema_asserts_to_asserts(
     match schema.min_length {
         Some(min) => asserts.push(assert_query_matches_with_comment(
             &query_value,
-            if schema.exclusive_minimum == Some(true) {
-                PredicateFuncValue::Match {
-                    space0: single_space(),
-                    value: PredicateValue::Regex(regex_from_pattern(format!("^.{{{}}}", min + 1))),
-                }
-            } else {
-                PredicateFuncValue::Match {
-                    space0: single_space(),
-                    value: PredicateValue::Regex(regex_from_pattern(format!("^.{{0,{min}}}$"))),
-                }
+            PredicateFuncValue::Match {
+                space0: single_space(),
+                value: PredicateValue::Regex(regex_from_pattern(format!("^.{{{min}}}"))),
             },
-            "assert max length".to_string(),
+            "assert min length".to_string(),
         )),
         None => (),
     };
@@ -70,19 +63,9 @@ fn add_string_schema_asserts_to_asserts(
     match schema.max_length {
         Some(max) => asserts.push(assert_query_matches_with_comment(
             &query_value,
-            if schema.exclusive_maximum == Some(true) {
-                PredicateFuncValue::Match {
-                    space0: single_space(),
-                    value: PredicateValue::Regex(regex_from_pattern(format!(
-                        "^.{{0,{}}}$",
-                        max - 1
-                    ))),
-                }
-            } else {
-                PredicateFuncValue::Match {
-                    space0: single_space(),
-                    value: PredicateValue::Regex(regex_from_pattern(format!("^.{{0,{max}}}$"))),
-                }
+            PredicateFuncValue::Match {
+                space0: single_space(),
+                value: PredicateValue::Regex(regex_from_pattern(format!("^.{{0,{max}}}$"))),
             },
             "assert max length".to_string(),
         )),

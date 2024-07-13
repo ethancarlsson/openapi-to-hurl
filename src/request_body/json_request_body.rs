@@ -40,7 +40,13 @@ pub fn parse_json_from_schema(
     }
 
     let default_val = match schema.schema_type {
-        Some(t) => Some(default_json_value_from_schema_type(t)),
+        Some(typeset) => match typeset {
+            oas3::spec::SchemaTypeSet::Single(t) => Some(default_json_value_from_schema_type(t)),
+            oas3::spec::SchemaTypeSet::Multiple(ts) => match ts.first() {
+                Some(t) => Some(default_json_value_from_schema_type(*t)),
+                None => None,
+            },
+        },
         None => None,
     };
 
@@ -107,6 +113,7 @@ fn default_json_value_from_schema_type(schema_type: oas3::spec::SchemaType) -> S
         }
         oas3::spec::SchemaType::Array => SimpleJsonValue::Array,
         oas3::spec::SchemaType::Object => SimpleJsonValue::Object,
+        oas3::spec::SchemaType::Null => SimpleJsonValue::Scalar(serde_json::Value::Null),
     }
 }
 

@@ -51,12 +51,13 @@ fn main() -> Result<()> {
             .with_context(|| format!("Invalid Open API 3.1 Specification or file I/O error."))?,
         None => {
             let stdin = io::stdin().lock();
+
             if stdin.is_terminal() {
                 return Err(anyhow!("Input can be either the path to an Open API specification file or it can be the entire specification passed in to stdin\n\nUsage: openapi-to-hurl <INPUT> [OUTPUT]\n\nFor example `openapi-to-hurl path/to/openapi/spec.json` or `cat path/to/openapi/spec.json | openapi-to-hurl`\n\nFor more information, try '--help'."));
-            } else {
-                oas3::from_reader(stdin)
-                    .with_context(|| format!("Invalid Open API 3.1 Specification or I/O error."))?
             }
+
+            oas3::from_reader(stdin)
+                .with_context(|| format!("Invalid Open API 3.1 Specification or I/O error."))?
         }
     };
 
@@ -192,24 +193,26 @@ fn hurl_files_from_spec_path(
 ) -> Result<Vec<(String, Vec<HurlFileString>)>, anyhow::Error> {
     let mut files = vec![];
     for path in spec.paths.iter() {
-        let hurl_files = HurlFiles::from_oai_path(path, &spec, &args);
+        for p in path {
+            let hurl_files = HurlFiles::from_oai_path(p, &spec, &args);
 
-        if hurl_files.errors.len() > 0 {
-            handle_errors(hurl_files.errors, &args.error_handling)?
-        }
+            if hurl_files.errors.len() > 0 {
+                handle_errors(hurl_files.errors, &args.error_handling)?
+            }
 
-        if hurl_files.hurl_files.len() > 0 {
-            files.push((
-                path.0.replace("/", "_"),
-                hurl_files
-                    .hurl_files
-                    .iter()
-                    .map(|f| HurlFileString {
-                        filename: f.operation.clone().unwrap_or(f.method.clone()),
-                        file: hurlfmt::format::format_text(f.file.clone(), false),
-                    })
-                    .collect(),
-            ))
+            if hurl_files.hurl_files.len() > 0 {
+                files.push((
+                    p.0.replace("/", "_"),
+                    hurl_files
+                        .hurl_files
+                        .iter()
+                        .map(|f| HurlFileString {
+                            filename: f.operation.clone().unwrap_or(f.method.clone()),
+                            file: hurlfmt::format::format_text(f.file.clone(), false),
+                        })
+                        .collect(),
+                ))
+            }
         }
     }
 
@@ -462,7 +465,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP *\n[Asserts]\n\nstatus < 400\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert max length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
+                file: "POST {{host}}/pets\n```\n10,\\\"doggie\\\"\n```\n\nHTTP *\n[Asserts]\n\nstatus < 400\nbody isString\nbody matches /^\\d+,\\d+$/\nbody matches /^.{4}/ #assert min length\nbody matches /^.{0,100}$/ #assert max length".to_string(),
                 filename: "addPet".to_string(),
             }],
         )];

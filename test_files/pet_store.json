@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "version": "1.0.0",
     "title": "Swagger Petstore",
@@ -117,8 +117,7 @@
                   "pattern": "^\\d+,\\d+$",
                   "maxLength": 100,
                   "example": "10,\"doggie\"",
-                  "minLength": 3,
-                  "exclusiveMinimum": true
+                  "minLength": 4
                 }
               }
             }

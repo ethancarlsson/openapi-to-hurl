@@ -17,8 +17,8 @@ use hurl_core::ast::{
 use log::{error, trace};
 use oas3::{
     spec::{
-        FromRef, ObjectOrReference, Operation, Parameter, PathItem, RefError, RequestBody,
-        SchemaType,
+        FromRef, ObjectOrReference, Operation, Parameter, ParameterIn, PathItem, RefError,
+        RequestBody, SchemaType, SchemaTypeSet,
     },
     Schema, Spec,
 };
@@ -122,6 +122,13 @@ impl<'a> HurlFileBuilder<'a> {
     }
 }
 
+fn schema_type_from_schema_type_set(schema_type_set: Option<SchemaTypeSet>) -> SchemaType {
+    match schema_type_set.unwrap_or(SchemaTypeSet::Single(SchemaType::String)) {
+        SchemaTypeSet::Single(t) => t,
+        SchemaTypeSet::Multiple(dt) => *dt.first().unwrap_or(&SchemaType::String),
+    }
+}
+
 fn to_file(
     path: OApiPath,
     spec: &Spec,
@@ -161,14 +168,17 @@ fn to_file(
         Err(_) => None,
     });
 
-    let path_params = param_iter.clone().filter(|p| p.location == "path");
-    let mut query_params = param_iter.filter(|p| p.location == "query");
+    let path_params = param_iter
+        .clone()
+        .filter(|p| p.location == ParameterIn::Path);
+
+    let mut query_params = param_iter.filter(|p| p.location == ParameterIn::Query);
 
     let mut uri = path_params.fold(path.0.clone(), |uri, param| {
         let schema = &param.schema.unwrap_or(Schema::default());
         uri.replace(
             &("{".to_string() + &param.name + "}"),
-            path_param_from_schema_type(schema.schema_type.unwrap_or(SchemaType::String)),
+            path_param_from_schema_type(schema_type_from_schema_type_set(schema.schema_type.clone())),
         )
     });
 
@@ -191,7 +201,7 @@ fn to_file(
                             match schema.example {
                                 Some(e) => e.to_string().replace("\"", ""),
                                 None => path_param_from_schema_type(
-                                    schema.schema_type.unwrap_or(SchemaType::String)
+                                    schema_type_from_schema_type_set(schema.schema_type)
                                 )
                                 .to_string(),
                             }
@@ -213,9 +223,9 @@ fn to_file(
                         Some(e) => {
                             e.to_string().replace("\"", "")
                         }
-                        None => path_param_from_schema_type(
-                            schema.schema_type.unwrap_or(SchemaType::String)
-                        )
+                        None => path_param_from_schema_type(schema_type_from_schema_type_set(
+                            schema.schema_type
+                        ))
                         .to_string(),
                     }
                 )
@@ -236,7 +246,7 @@ fn to_file(
                             match schema.example {
                                 Some(e) => e.to_string().replace("\"", ""),
                                 None => path_param_from_schema_type(
-                                    schema.schema_type.unwrap_or(SchemaType::String)
+                                    schema_type_from_schema_type_set(schema.schema_type)
                                 )
                                 .to_string(),
                             }
@@ -258,9 +268,9 @@ fn to_file(
                         Some(e) => {
                             e.to_string().replace("\"", "")
                         }
-                        None => path_param_from_schema_type(
-                            schema.schema_type.unwrap_or(SchemaType::String)
-                        )
+                        None => path_param_from_schema_type(schema_type_from_schema_type_set(
+                            schema.schema_type
+                        ))
                         .to_string(),
                     }
                 )
@@ -414,6 +424,7 @@ fn path_param_from_schema_type(schema_type: SchemaType) -> &'static str {
         SchemaType::String => "string_value",
         SchemaType::Array => "[]array_value",
         SchemaType::Object => "{}",
+        SchemaType::Null => "%00",
     }
 }
 

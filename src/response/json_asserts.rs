@@ -2,7 +2,10 @@ use std::collections::BTreeMap;
 
 use hurl_core::ast::{Assert, FilterValue, Float, PredicateValue, TemplateElement};
 use log::{debug, warn};
-use oas3::{spec::RefError, Schema, Spec};
+use oas3::{
+    spec::{RefError, SchemaTypeSet},
+    Schema, Spec,
+};
 
 use crate::{
     custom_hurl_ast::empty_source_info, hurl_files::single_space,
@@ -55,12 +58,12 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
         }
 
         let schema_type = match schema.schema_type {
-            Some(t) => t,
+            Some(ref t) => t,
             None => {
                 if schema.properties.len() > 0 {
-                    oas3::spec::SchemaType::Object
+                    &SchemaTypeSet::Single(oas3::spec::SchemaType::Object)
                 } else if schema.items.is_some() {
-                    oas3::spec::SchemaType::Array
+                    &SchemaTypeSet::Single(oas3::spec::SchemaType::Array)
                 } else {
                     return Ok(self);
                 }
@@ -68,22 +71,26 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
         };
 
         // This tool can't handle union types.
-        if schema.nullable == Some(true) || !schema.one_of.is_empty() || !schema.any_of.is_empty() {
-            debug!("Schema {} is nullable or uses oneOf/anyOf, this tool can't generate assertions for schemas with multiple possible types", schema.title.unwrap_or("".to_string()));
-            return Ok(self);
-        }
-
         match schema_type {
-            oas3::spec::SchemaType::Boolean => self.asserts.push(assert_query_matches_predicate(
-                &query_value,
-                hurl_core::ast::PredicateFuncValue::IsBoolean,
-            )),
-            oas3::spec::SchemaType::Integer => self.add_int_asserts(schema, query_value),
-            oas3::spec::SchemaType::Number => self.add_number_asserts(schema, query_value),
-            oas3::spec::SchemaType::String => self.add_string_asserts(schema, query_value),
-            oas3::spec::SchemaType::Array => self.add_array_asserts(schema, query_value),
-            oas3::spec::SchemaType::Object => self.add_object_asserts(schema, query_value)?,
-        };
+            SchemaTypeSet::Single(t) => match t {
+                oas3::spec::SchemaType::Boolean => {
+                    self.asserts.push(assert_query_matches_predicate(
+                        &query_value,
+                        hurl_core::ast::PredicateFuncValue::IsBoolean,
+                    ))
+                }
+                oas3::spec::SchemaType::Integer => self.add_int_asserts(schema, query_value),
+                oas3::spec::SchemaType::Number => self.add_number_asserts(schema, query_value),
+                oas3::spec::SchemaType::String => self.add_string_asserts(schema, query_value),
+                oas3::spec::SchemaType::Array => self.add_array_asserts(schema, query_value),
+                oas3::spec::SchemaType::Object => self.add_object_asserts(schema, query_value)?,
+                oas3::spec::SchemaType::Null => (),
+            },
+            SchemaTypeSet::Multiple(_) => {
+                debug!("Schema {} is nullable or uses oneOf/anyOf, this tool can't generate assertions for schemas with multiple possible types", schema.title.unwrap_or("".to_string()));
+                return Ok(self);
+            }
+        }
 
         Ok(self)
     }
@@ -99,54 +106,54 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
         ));
 
         match schema.minimum {
-            Some(n) => {
-                if schema.exclusive_minimum == Some(true) {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::GreaterThan {
-                            space0: single_space(),
-                            value: serde_num_to_hurl_num(n),
-                            operator: true,
-                        },
-                    ))
-                } else {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
-                            space0: single_space(),
-                            value: serde_num_to_hurl_num(n),
-                            operator: true,
-                        },
-                    ))
-                }
-            }
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
+                    space0: single_space(),
+                    value: serde_num_to_hurl_num(n),
+                    operator: true,
+                },
+            )),
             None => (),
         };
 
-        match schema.maximum {
+        match schema.exclusive_minimum {
             Some(n) => {
-                if schema.exclusive_maximum == Some(true) {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::LessThan {
-                            space0: single_space(),
-                            value: serde_num_to_hurl_num(n),
-                            operator: true,
-                        },
-                    ))
-                } else {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::LessThanOrEqual {
-                            space0: single_space(),
-                            value: serde_num_to_hurl_num(n),
-                            operator: true,
-                        },
-                    ))
-                }
+                self.asserts.push(assert_query_matches_predicate(
+                    &query_value,
+                    hurl_core::ast::PredicateFuncValue::GreaterThan {
+                        space0: single_space(),
+                        value: serde_num_to_hurl_num(n),
+                        operator: true,
+                    },
+                ));
             }
             None => (),
+        }
+
+        match schema.maximum {
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::LessThanOrEqual {
+                    space0: single_space(),
+                    value: serde_num_to_hurl_num(n),
+                    operator: true,
+                },
+            )),
+            None => (),
         };
+
+        match schema.exclusive_maximum {
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::LessThan {
+                    space0: single_space(),
+                    value: serde_num_to_hurl_num(n),
+                    operator: true,
+                },
+            )),
+            None => (),
+        }
     }
 
     fn build_schema_from_allof(&self, schema: Schema) -> Result<Schema, RefError> {
@@ -177,54 +184,52 @@ impl<'a> SchemaToJsonAssertBuilder<'a> {
         ));
 
         match schema.minimum {
-            Some(n) => {
-                if schema.exclusive_minimum == Some(true) {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::GreaterThan {
-                            space0: single_space(),
-                            value: predicate_integer_number(n),
-                            operator: true,
-                        },
-                    ))
-                } else {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
-                            space0: single_space(),
-                            value: predicate_integer_number(n),
-                            operator: true,
-                        },
-                    ))
-                }
-            }
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::GreaterThanOrEqual {
+                    space0: single_space(),
+                    value: predicate_integer_number(n),
+                    operator: true,
+                },
+            )),
             None => (),
         };
 
+        match schema.exclusive_minimum {
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::GreaterThan {
+                    space0: single_space(),
+                    value: predicate_integer_number(n),
+                    operator: true,
+                },
+            )),
+            None => (),
+        }
+
         match schema.maximum {
-            Some(n) => {
-                if schema.exclusive_maximum == Some(true) {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::LessThan {
-                            space0: single_space(),
-                            value: predicate_integer_number(n),
-                            operator: true,
-                        },
-                    ))
-                } else {
-                    self.asserts.push(assert_query_matches_predicate(
-                        &query_value,
-                        hurl_core::ast::PredicateFuncValue::LessThanOrEqual {
-                            space0: single_space(),
-                            value: predicate_integer_number(n),
-                            operator: true,
-                        },
-                    ))
-                }
-            }
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::LessThanOrEqual {
+                    space0: single_space(),
+                    value: predicate_integer_number(n),
+                    operator: true,
+                },
+            )),
             None => (),
         };
+
+        match schema.exclusive_maximum {
+            Some(n) => self.asserts.push(assert_query_matches_predicate(
+                &query_value,
+                hurl_core::ast::PredicateFuncValue::LessThan {
+                    space0: single_space(),
+                    value: predicate_integer_number(n),
+                    operator: true,
+                },
+            )),
+            None => (),
+        }
     }
 
     fn add_string_asserts(&mut self, schema: Schema, query_value: &hurl_core::ast::QueryValue) {
@@ -407,7 +412,7 @@ pub fn parse_json_response_body_asserts(
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
+    use std::{collections::BTreeMap, str::FromStr};
 
     use hurl_core::ast::{Assert, Float};
     use oas3::{Schema, Spec};
@@ -428,13 +433,10 @@ mod tests {
     #[test]
     fn parse_json_response_body_with_no_schema_type_returns_empty_asserts() {
         let mut schema = Schema::default();
+        let spec = get_default_spec();
         schema.schema_type = None;
-        let result = parse_json_response_body_asserts(
-            schema,
-            &Spec::default(),
-            HandleUnionsBy::IgnoringThem,
-            true,
-        );
+        let result =
+            parse_json_response_body_asserts(schema, &spec, HandleUnionsBy::IgnoringThem, true);
         let expected: Vec<Assert> = vec![assert_status_less_than(400)];
 
         assert_eq!(Ok(expected), result);
@@ -443,10 +445,13 @@ mod tests {
     #[test]
     fn parse_json_response_body_with_bool_schema_type_returns_bool_asserts() {
         let mut schema = Schema::default();
-        schema.schema_type = Some(oas3::spec::SchemaType::Boolean);
+        schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+            oas3::spec::SchemaType::Boolean,
+        ));
+
         let result = parse_json_response_body_asserts(
             schema,
-            &Spec::default(),
+            &get_default_spec(),
             HandleUnionsBy::IgnoringThem,
             true,
         );
@@ -469,16 +474,16 @@ mod tests {
     fn parse_json_response_body_with_number_returns_number_asserts() {
         let mut schema = Schema::default();
 
-        schema.schema_type = Some(oas3::spec::SchemaType::Number);
-        schema.maximum = Some(Number::from_f64(3.0).unwrap());
-        schema.exclusive_maximum = Some(true);
+        schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+            oas3::spec::SchemaType::Number,
+        ));
+        schema.exclusive_maximum = serde_json::from_str("3.0").ok();
 
         schema.minimum = Some(Number::from_f64(1.0).unwrap());
-        schema.exclusive_minimum = Some(false);
 
         let result = parse_json_response_body_asserts(
             schema,
-            &Spec::default(),
+            &get_default_spec(),
             HandleUnionsBy::IgnoringThem,
             true,
         );
@@ -533,16 +538,16 @@ mod tests {
     fn parse_json_response_body_with_int_returns_int_asserts() {
         let mut schema = Schema::default();
 
-        schema.schema_type = Some(oas3::spec::SchemaType::Integer);
-        schema.maximum = Some(Number::from_str("3").unwrap());
-        schema.exclusive_maximum = Some(true);
+        schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+            oas3::spec::SchemaType::Integer,
+        ));
+        schema.exclusive_maximum = serde_json::from_str("3").ok();
 
         schema.minimum = Some(Number::from_str("1").unwrap());
-        schema.exclusive_minimum = Some(false);
 
         let result = parse_json_response_body_asserts(
             schema,
-            &Spec::default(),
+            &get_default_spec(),
             HandleUnionsBy::IgnoringThem,
             true,
         );
@@ -585,5 +590,27 @@ mod tests {
         ];
 
         assert_eq!(Ok(expected), result);
+    }
+
+    fn get_default_spec() -> Spec {
+        Spec {
+            openapi: "3.0.0".to_string(),
+            info: oas3::spec::Info {
+                title: "Swagger Petstore".to_string(),
+                summary: None,
+                description: None,
+                terms_of_service: None,
+                version: "1.0.0".to_string(),
+                contact: None,
+                license: None,
+            },
+            servers: vec![],
+            paths: None,
+            components: None,
+            tags: vec![],
+            webhooks: BTreeMap::new(),
+            external_docs: None,
+            extensions: BTreeMap::new(),
+        }
     }
 }
