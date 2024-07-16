@@ -13,7 +13,7 @@ cargo install openapi-to-hurl
 brew tap ethancarlsson/openapi-to-hurl
 brew install openapi-to-hurl
 ```
-NOTE: All binaries are more MacOS, Linux users will need to install using Cargo.
+NOTE: All binaries are for MacOS, Linux users will need to install using Cargo.
 
 ### Usage
 openapi-to-hurl accepts the path to an Open API 3 specification, produces hurl
