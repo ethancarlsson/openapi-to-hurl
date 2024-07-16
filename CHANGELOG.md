@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.0.1...v1.1.0) (2024-07-16)
+
+
+### Bug Fixes
+
+* Correctly use OAS3.1 schema validation for exclusiveMinimum and exclusiveMaximum ([d2c85bd](https://github.com/ethancarlsson/openapi-to-hurl/commit/d2c85bd2b87776fb1a128b7e46886e1656aecac5))
+
+
+### Features
+
+* Wrap errors to make it clear what user should do when getting a spec error ([88ed836](https://github.com/ethancarlsson/openapi-to-hurl/commit/88ed83661e9ee0315390e52b2130cebf2d8410b4))
+
+
+
 ## [1.0.1](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.0.0...v1.0.1) (2024-07-08)
 
 
@@ -82,15 +96,6 @@ Also, the primary argument name changed from "path" to "input".
 * Full validation for json schemas ([fa23083](https://github.com/ethancarlsson/openapi-to-hurl/commit/fa230838b5acb72d20d6c39ebe11e7eca71273a0))
 * Full validation for plain text ([099c08e](https://github.com/ethancarlsson/openapi-to-hurl/commit/099c08e1a8e647b3d1d6d0d7d9069922c6711ed0))
 * Validate json objects that use allOf properties ([887dfbe](https://github.com/ethancarlsson/openapi-to-hurl/commit/887dfbe1fdc2911c0c23c728d9a73cb974e6fb36))
-
-
-
-## [0.2.2](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.1...v0.2.2) (2024-02-05)
-
-
-### Bug Fixes
-
-* Add a delimiter to multiline strings ([f70b00e](https://github.com/ethancarlsson/openapi-to-hurl/commit/f70b00e118ff46ef2bf2d65d3111bca4b04fdc41))
 
 
 
