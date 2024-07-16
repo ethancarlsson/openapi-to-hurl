@@ -24,6 +24,7 @@ mod hurl_files;
 mod request_body;
 mod response;
 mod settings;
+mod spec_reader;
 mod variable_files;
 
 fn main() -> Result<()> {
@@ -47,8 +48,7 @@ fn main() -> Result<()> {
     trace!("parsing oas3 from path");
 
     let spec = match &args.input {
-        Some(p) => oas3::from_path(p)
-            .with_context(|| format!("Invalid Open API 3.1 Specification or file I/O error."))?,
+        Some(p) => spec_reader::from_path(p.to_path_buf())?,
         None => {
             let stdin = io::stdin().lock();
 
@@ -56,8 +56,7 @@ fn main() -> Result<()> {
                 return Err(anyhow!("Input can be either the path to an Open API specification file or it can be the entire specification passed in to stdin\n\nUsage: openapi-to-hurl <INPUT> [OUTPUT]\n\nFor example `openapi-to-hurl path/to/openapi/spec.json` or `cat path/to/openapi/spec.json | openapi-to-hurl`\n\nFor more information, try '--help'."));
             }
 
-            oas3::from_reader(stdin)
-                .with_context(|| format!("Invalid Open API 3.1 Specification or I/O error."))?
+            spec_reader::from_reader(stdin)?
         }
     };
 
