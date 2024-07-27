@@ -290,11 +290,11 @@ mod tests {
                 "_pets_{petId}".to_string(),
                 vec![
                     HurlFileString {
-                        file: "GET {{host}}/pets/string_value\n".to_string(),
+                        file: "GET {{host}}/pets/22\n".to_string(),
                         filename: "showPetById".to_string(),
                     },
                     HurlFileString {
-                        file: "POST {{host}}/pets/string_value\n".to_string(),
+                        file: "POST {{host}}/pets/id_11\n".to_string(),
                         filename: "createPetById".to_string(),
                     },
                 ],
@@ -410,7 +410,7 @@ mod tests {
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n".to_string(),
+                    file: "GET {{host}}/pets/22\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -603,7 +603,7 @@ mod tests {
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n".to_string(),
+                    file: "GET {{host}}/pets/22\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -648,7 +648,7 @@ mod tests {
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
+                    file: "GET {{host}}/pets/22\nAuthorization: {{Authorization}}\ntest_key: {{test_key}}\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -682,7 +682,7 @@ mod tests {
             (
                 "_pets_{petId}".to_string(),
                 vec![HurlFileString {
-                    file: "GET {{host}}/pets/string_value\n".to_string(),
+                    file: "GET {{host}}/pets/22\n".to_string(),
                     filename: "showPetById".to_string(),
                 }],
             ),
@@ -709,7 +709,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets_{petId}".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets/string_value\n\nHTTP *\n[Asserts]\n\njsonpath \"$\" isCollection\njsonpath \"$.code\" isInteger\njsonpath \"$.message\" isString".to_string(),
+                file: "POST {{host}}/pets/id_11\n\nHTTP *\n[Asserts]\n\njsonpath \"$\" isCollection\njsonpath \"$.code\" isInteger\njsonpath \"$.message\" isString".to_string(),
                 filename: "createPetById".to_string(),
             }],
         )];
@@ -736,7 +736,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets_{petId}".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets/string_value\n\nHTTP *\n[Asserts]\n\nbody isString"
+                file: "POST {{host}}/pets/id_11\n\nHTTP *\n[Asserts]\n\nbody isString"
                     .to_string(),
                 filename: "createPetById".to_string(),
             }],
@@ -763,10 +763,43 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets_{petId}".to_string(),
             vec![HurlFileString {
-                file: "GET {{host}}/pets/string_value\n".to_string(),
+                file: "GET {{host}}/pets/22\n".to_string(),
                 filename: "showPetById".to_string(),
             }],
         )];
+        assert_eq!(expected, result.unwrap());
+    }
+
+    #[test]
+    fn hurl_files_from_spec_with_path_param_variables_option() {
+        let spec_path = PathBuf::from_str("test_files/pet_store.json").unwrap();
+        let spec = oas3::from_path(spec_path.clone()).unwrap();
+
+        let result = hurl_files_from_spec_path(
+            &Settings {
+                input: Some(spec_path),
+                query_params_choice: crate::cli::QueryParamChoice::None,
+                operation_id_selection: Some(vec!["showPetById".to_string(), "createPetById".to_string()]),
+                path_params_choice: crate::cli::PathParamChoice::Variables,
+                ..Settings::default()
+            },
+            &spec,
+        );
+
+        let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
+            "_pets_{petId}".to_string(),
+            vec![
+                HurlFileString {
+                file: "GET {{host}}/pets/{{petId}}\n[Options]\nvariable: petId=22\n".to_string(),
+                filename: "showPetById".to_string(),
+            },
+                HurlFileString {
+                file: "POST {{host}}/pets/{{petId}}\n[Options]\nvariable: petId=id_11\n".to_string(),
+                filename: "createPetById".to_string(),
+            },
+            ],
+        )];
+
         assert_eq!(expected, result.unwrap());
     }
 }

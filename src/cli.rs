@@ -99,6 +99,16 @@ pub enum Grouping {
     Path,
 }
 
+#[derive(ValueEnum, Clone, Default)]
+pub enum PathParamChoice {
+    /// Use default values as input to path parameters
+    #[default]
+    Default,
+    /// Use hurl variables as input to path parameters. Set the default values of path params in
+    /// the "Options" section of each hurl entry
+    Variables,
+}
+
 /// Generate hurl files from an Open API 3 specification.
 #[derive(Parser)]
 pub struct Cli {
@@ -119,6 +129,9 @@ pub struct Cli {
     /// Choose whether, and how to, pass query params.
     #[arg(short = 'q', long, default_value_t = QueryParamChoice::default(), value_enum)]
     pub query_params: QueryParamChoice,
+    /// Pass this argument to select how the path params will be represented in hurl.
+    #[arg(short = 'p', long, default_value_t = PathParamChoice::default(), value_enum)]
+    pub path_params: PathParamChoice,
     /// Generate only the operations identified with this options, e.g. `openapi-to-hurl openapi.json -i getProducts -i createProduct`.
     #[arg(short = 'i', long)]
     pub operation_id: Option<Vec<String>>,

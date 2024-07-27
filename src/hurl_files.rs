@@ -12,7 +12,8 @@ use crate::{
     settings::Settings,
 };
 use hurl_core::ast::{
-    Body, Entry, HurlFile, KeyValue, Method, Request, Template, TemplateElement, Whitespace,
+    Body, Entry, EntryOption, HurlFile, KeyValue, Method, Request, Section, Template,
+    TemplateElement, VariableDefinition, VariableValue, Whitespace,
 };
 use log::{error, trace};
 use oas3::{
@@ -136,6 +137,9 @@ fn to_file(
     method: &HttpMethod,
     settings: &Settings,
 ) -> Result<HurlFile, Vec<OperationError>> {
+    let mut sections: Vec<Section> = vec![];
+    let mut options: Vec<EntryOption> = vec![];
+
     let param_result_iter = operation.parameters.iter().map(|p| match p {
         ObjectOrReference::Object(p) => Ok(p.clone()),
         ObjectOrReference::Ref { ref_path } => Parameter::from_ref(&spec, &ref_path),
@@ -176,17 +180,60 @@ fn to_file(
 
     let mut uri = path_params.fold(path.0.clone(), |uri, param| {
         let schema = &param.schema.unwrap_or(Schema::default());
-        uri.replace(
-            &("{".to_string() + &param.name + "}"),
-            &match param.example {
-                Some(e) => e.to_string().replace("\"", ""),
-                None => path_param_from_schema_type(schema_type_from_schema_type_set(
-                    schema.schema_type.clone(),
-                ))
-                .to_string(),
-            },
-        )
+
+        let default_value = match &schema.example {
+            Some(example) => example.to_string().replace("\"", ""),
+            None => path_param_from_schema_type(schema_type_from_schema_type_set(
+                schema.schema_type.clone(),
+            ))
+            .to_string(),
+        };
+
+        match settings.path_params_choice {
+            crate::cli::PathParamChoice::Default => {
+                uri.replace(&("{".to_string() + &param.name + "}"), &default_value)
+            }
+            crate::cli::PathParamChoice::Variables => {
+                let variables_option = EntryOption {
+                    line_terminators: vec![],
+                    space0: empty_space(),
+                    space1: empty_space(),
+                    space2: single_space(),
+                    kind: hurl_core::ast::OptionKind::Variable(VariableDefinition {
+                        name: param.name.to_string(),
+                        space0: empty_space(),
+                        space1: empty_space(),
+                        value: VariableValue::String(Template {
+                            delimiter: None,
+                            elements: vec![TemplateElement::String {
+                                value: default_value.to_string(),
+                                encoded: default_value.to_string(),
+                            }],
+                            source_info: empty_source_info(),
+                        }),
+                    }),
+                    line_terminator0: newline(),
+                };
+
+                options.push(variables_option);
+
+                uri.replace(
+                    &("{".to_string() + &param.name + "}"),
+                    &("{{".to_string() + &param.name + "}}"),
+                )
+            }
+        }
     });
+
+    if options.len() > 0 {
+        sections.push(Section {
+            line_terminators: vec![],
+            space0: empty_space(),
+            line_terminator0: newline(),
+            value: hurl_core::ast::SectionValue::Options(options),
+            source_info: empty_source_info(),
+        });
+    }
 
     match settings.query_params_choice {
         crate::cli::QueryParamChoice::None => (),
@@ -333,7 +380,7 @@ fn to_file(
                     line_terminator0: newline(),
                 })
                 .collect(),
-            sections: vec![],
+            sections,
             body: request_body,
             source_info: empty_source_info(),
         },

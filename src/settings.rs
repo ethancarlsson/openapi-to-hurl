@@ -1,7 +1,7 @@
 use crate::{
     cli::{
-        Cli, ErrorHandling, Formatting, LogLevel, QueryParamChoice, ResponseValidationChoice,
-        VariablesUpdateStrategy,
+        Cli, ErrorHandling, Formatting, LogLevel, PathParamChoice, QueryParamChoice,
+        ResponseValidationChoice, VariablesUpdateStrategy,
     },
     content_type::ContentType,
     variable_files::CustomVariables,
@@ -13,6 +13,7 @@ pub struct Settings {
     pub out_dir: Option<std::path::PathBuf>,
     pub validate_response: ResponseValidationChoice,
     pub query_params_choice: QueryParamChoice,
+    pub path_params_choice: PathParamChoice,
     pub custom_variables: CustomVariables,
     pub variables_update_strategy: VariablesUpdateStrategy,
     pub operation_id_selection: Option<Vec<String>>,
@@ -33,6 +34,7 @@ impl TryFrom<Cli> for Settings {
             out_dir: cli.out_dir,
             validate_response: cli.validation,
             query_params_choice: cli.query_params,
+            path_params_choice: cli.path_params,
             variables_update_strategy: cli.variables_file_update,
             custom_variables: CustomVariables {
                 headers: cli.header_vars,

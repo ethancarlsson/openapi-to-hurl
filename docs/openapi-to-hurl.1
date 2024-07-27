@@ -4,7 +4,7 @@
 .SH NAME
 openapi\-to\-hurl \- Generate hurl files from an Open API 3 specification
 .SH SYNOPSIS
-\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-i\fR|\fB\-\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-file\-update\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-error\-handling\fR] [\fB\-\-grouping\fR] [\fB\-v\fR|\fB\-\-version\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
+\fBopenapi\-to\-hurl\fR [\fB\-o\fR|\fB\-\-out\-dir\fR] [\fB\-n\fR|\fB\-\-validation\fR] [\fB\-r\fR|\fB\-\-header\-vars\fR] [\fB\-q\fR|\fB\-\-query\-params\fR] [\fB\-p\fR|\fB\-\-path\-params\fR] [\fB\-i\fR|\fB\-\-operation\-id\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-\-variables\-file\-update\fR] [\fB\-\-formatting\fR] [\fB\-\-content\-type\fR] [\fB\-l\fR|\fB\-\-log\-level\fR] [\fB\-\-quiet\fR] [\fB\-\-error\-handling\fR] [\fB\-\-grouping\fR] [\fB\-v\fR|\fB\-\-version\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIINPUT\fR] 
 .SH DESCRIPTION
 Generate hurl files from an Open API 3 specification
 .SH OPTIONS
@@ -45,6 +45,19 @@ none: No query params
 required: Only the required query params
 .IP \(bu 2
 all: Sets a value for all query params
+.RE
+.TP
+\fB\-p\fR, \fB\-\-path\-params\fR=\fIPATH_PARAMS\fR [default: default]
+Pass this argument to select how the path params will be represented in hurl
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+default: Use default values as input to path parameters
+.IP \(bu 2
+variables: Use hurl variables as input to path parameters. Set the default values of path params in the "Options" section of each hurl entry
 .RE
 .TP
 \fB\-i\fR, \fB\-\-operation\-id\fR=\fIOPERATION_ID\fR

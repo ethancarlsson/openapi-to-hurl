@@ -194,6 +194,7 @@
             "required": true,
             "description": "The id of the pet to retrieve",
             "schema": {
+              "example": "id_11",
               "type": "string"
             }
           }
@@ -231,7 +232,8 @@
             "required": true,
             "description": "The id of the pet to retrieve",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "example": 22
             }
           }
         ],
