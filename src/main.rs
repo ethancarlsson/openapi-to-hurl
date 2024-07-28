@@ -736,8 +736,7 @@ mod tests {
         let expected: Vec<(String, Vec<HurlFileString>)> = vec![(
             "_pets_{petId}".to_string(),
             vec![HurlFileString {
-                file: "POST {{host}}/pets/id_11\n\nHTTP *\n[Asserts]\n\nbody isString"
-                    .to_string(),
+                file: "POST {{host}}/pets/id_11\n\nHTTP *\n[Asserts]\n\nbody isString".to_string(),
                 filename: "createPetById".to_string(),
             }],
         )];
@@ -779,7 +778,10 @@ mod tests {
             &Settings {
                 input: Some(spec_path),
                 query_params_choice: crate::cli::QueryParamChoice::None,
-                operation_id_selection: Some(vec!["showPetById".to_string(), "createPetById".to_string()]),
+                operation_id_selection: Some(vec![
+                    "showPetById".to_string(),
+                    "createPetById".to_string(),
+                ]),
                 path_params_choice: crate::cli::PathParamChoice::Variables,
                 ..Settings::default()
             },
@@ -790,13 +792,15 @@ mod tests {
             "_pets_{petId}".to_string(),
             vec![
                 HurlFileString {
-                file: "GET {{host}}/pets/{{petId}}\n[Options]\nvariable: petId=22\n".to_string(),
-                filename: "showPetById".to_string(),
-            },
+                    file: "GET {{host}}/pets/{{petId}}\n[Options]\nvariable: petId=22\n"
+                        .to_string(),
+                    filename: "showPetById".to_string(),
+                },
                 HurlFileString {
-                file: "POST {{host}}/pets/{{petId}}\n[Options]\nvariable: petId=id_11\n".to_string(),
-                filename: "createPetById".to_string(),
-            },
+                    file: "POST {{host}}/pets/{{petId}}\n[Options]\nvariable: petId=id_11\n"
+                        .to_string(),
+                    filename: "createPetById".to_string(),
+                },
             ],
         )];
 

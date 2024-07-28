@@ -50,15 +50,17 @@ impl VariableFile {
             .collect::<Vec<String>>();
 
         // Filter out all keys in the new file
-        let mut new_kvs = self.key_vals.iter()
-        .filter_map(|kv| {
-            if !other_keys.contains(&kv.0)  {
-                Some(kv.clone())
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<(String, String)>>();
+        let mut new_kvs = self
+            .key_vals
+            .iter()
+            .filter_map(|kv| {
+                if !other_keys.contains(&kv.0) {
+                    Some(kv.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<(String, String)>>();
 
         // Extend the file with all the new values
         new_kvs.extend(other.key_vals.iter().map(|kv| kv.clone()));

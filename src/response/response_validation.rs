@@ -60,8 +60,7 @@ pub fn validation_response_full(
         }
         None => match response_btree_map.iter().nth(0) {
             Some(r) => r.1.resolve(spec)?,
-            None => {
-                    return Ok(None)}
+            None => return Ok(None),
         },
     };
 

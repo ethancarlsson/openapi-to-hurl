@@ -1,4 +1,4 @@
-use hurl_core::ast::{SourceInfo, Pos, LineTerminator, Whitespace};
+use hurl_core::ast::{LineTerminator, Pos, SourceInfo, Whitespace};
 
 pub fn empty_source_info() -> SourceInfo {
     SourceInfo {
