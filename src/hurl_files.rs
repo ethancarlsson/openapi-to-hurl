@@ -178,7 +178,13 @@ fn to_file(
         let schema = &param.schema.unwrap_or(Schema::default());
         uri.replace(
             &("{".to_string() + &param.name + "}"),
-            path_param_from_schema_type(schema_type_from_schema_type_set(schema.schema_type.clone())),
+            &match param.example {
+                Some(e) => e.to_string().replace("\"", ""),
+                None => path_param_from_schema_type(schema_type_from_schema_type_set(
+                    schema.schema_type.clone(),
+                ))
+                .to_string(),
+            },
         )
     });
 
