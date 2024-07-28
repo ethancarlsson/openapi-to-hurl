@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.4 -->
-<!-- CreationDate: Tue Jul 16 16:13:21 2024 -->
+<!-- CreationDate: Sun Jul 28 07:55:52 2024 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -47,6 +47,7 @@
 [<b>-o</b>|<b>--out-dir</b>] [<b>-n</b>|<b>--validation</b>]
 [<b>-r</b>|<b>--header-vars</b>]
 [<b>-q</b>|<b>--query-params</b>]
+[<b>-p</b>|<b>--path-params</b>]
 [<b>-i</b>|<b>--operation-id</b>] [<b>-t</b>|<b>--tag</b>]
 [<b>--variables-file-update</b>] [<b>--formatting</b>]
 [<b>--content-type</b>] [<b>-l</b>|<b>--log-level</b>]
@@ -196,6 +197,45 @@ values:</i></p>
 <p>all: Sets a value for all query params</p></td>
 <td width="3%">
 </td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>-p</b>,
+<b>--path-params</b>=<i>PATH_PARAMS</i> [default:
+default]</p>
+
+<p style="margin-left:22%;">Pass this argument to select
+how the path params will be represented in hurl</p>
+
+<p style="margin-left:22%; margin-top: 1em"><i>Possible
+values:</i></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>default: Use default values as input to path
+parameters</p> </td></tr>
+<tr valign="top" align="left">
+<td width="32%"></td>
+<td width="2%">
+
+
+<p>&bull;</p></td>
+<td width="1%"></td>
+<td width="65%">
+
+
+<p>variables: Use hurl variables as input to path
+parameters. Set the default values of path params in the
+&quot;Options&quot; section of each hurl entry</p></td></tr>
 </table>
 
 <p style="margin-left:11%;"><b>-i</b>,

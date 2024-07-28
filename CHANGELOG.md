@@ -1,3 +1,17 @@
+# [1.2.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.1.0...v1.2.0) (2024-07-28)
+
+
+### Bug Fixes
+
+* Examples are now used for defaults of path params as with other schemas that have examples ([30f4912](https://github.com/ethancarlsson/openapi-to-hurl/commit/30f4912b5a8478c4b519af47b5e0aef01d4f97bc))
+
+
+### Features
+
+* Adds a new `path-params` option that allows users to have path params set as variables rather than as default values. `path-params` will accept `default` or `variables` as input. ([b84a331](https://github.com/ethancarlsson/openapi-to-hurl/commit/b84a3312b8e37b3e2074af53c7f817ef337424be))
+
+
+
 # [1.1.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.0.1...v1.1.0) (2024-07-16)
 
 
@@ -79,23 +93,6 @@ Also, the primary argument name changed from "path" to "input".
 * Allow user to generate validation for optionals ([e2cea76](https://github.com/ethancarlsson/openapi-to-hurl/commit/e2cea768d230505618f34e6e663fe3ae0e08b7c0))
 * Allow user to ignore and log errors instead of terminating program ([75e4fc1](https://github.com/ethancarlsson/openapi-to-hurl/commit/75e4fc102f91f0410a525f4466006fa72310a90c))
 * Allow users to set log level and improve debug logging ([c8a7d9a](https://github.com/ethancarlsson/openapi-to-hurl/commit/c8a7d9aabcd8f4b35581b594e09caa0198ac9dff))
-
-
-
-# [0.3.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.2.2...v0.3.0) (2024-02-17)
-
-
-### Bug Fixes
-
-* Fix handling of allOf in json request bodies ([e7e9e41](https://github.com/ethancarlsson/openapi-to-hurl/commit/e7e9e410eb4f5aeda4c09f737744673fc15f14c0))
-
-
-### Features
-
-* Add `non-error` validation option and deprecate `http-200` ([36c97a6](https://github.com/ethancarlsson/openapi-to-hurl/commit/36c97a678e6c75871f94abbab0f9bf426a4104c7))
-* Full validation for json schemas ([fa23083](https://github.com/ethancarlsson/openapi-to-hurl/commit/fa230838b5acb72d20d6c39ebe11e7eca71273a0))
-* Full validation for plain text ([099c08e](https://github.com/ethancarlsson/openapi-to-hurl/commit/099c08e1a8e647b3d1d6d0d7d9069922c6711ed0))
-* Validate json objects that use allOf properties ([887dfbe](https://github.com/ethancarlsson/openapi-to-hurl/commit/887dfbe1fdc2911c0c23c728d9a73cb974e6fb36))
 
 
 
