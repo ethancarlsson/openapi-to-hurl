@@ -238,6 +238,9 @@ mod tests {
         json!({
         "id": 3,
         "name": "string",
+        "some_arr_with_no_type": [
+            "string"
+        ],
         "photo_urls": [
           "https://example.com/img.png",
           "https://example.com/img2.png"
@@ -535,6 +538,7 @@ mod tests {
                     + "\njsonpath \"$.id\" isInteger"
                     + "\njsonpath \"$.inner\" isCollection\njsonpath \"$.inner.test\" isString"
                     + "\njsonpath \"$.name\" isString\njsonpath \"$.photo_urls\" isCollection"
+                    + "\njsonpath \"$.some_arr_with_no_type\" isCollection"
                     + "\njsonpath \"$.tag\" isString",
                 filename: "addPet".to_string(),
             }],

@@ -265,7 +265,6 @@
   "components": {
     "schemas": {
       "Pet": {
-        "type": "object",
         "required": [
           "id",
           "name",
@@ -283,6 +282,11 @@
           "tag": {
             "type": "string"
           },
+          "some_arr_with_no_type": {
+            "items": {
+              "type": "string"
+            }
+	},
           "photo_urls": {
             "type": "array",
             "items": {

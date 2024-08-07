@@ -40,8 +40,8 @@ pub fn parse_json_from_schema(
     }
 
     let default_val = match schema.schema_type {
-        Some(typeset) => match typeset {
-            oas3::spec::SchemaTypeSet::Single(t) => Some(default_json_value_from_schema_type(t)),
+        Some(ref typeset) => match typeset {
+            oas3::spec::SchemaTypeSet::Single(t) => Some(default_json_value_from_schema_type(*t)),
             oas3::spec::SchemaTypeSet::Multiple(ts) => match ts.first() {
                 Some(t) => Some(default_json_value_from_schema_type(*t)),
                 None => None,
@@ -69,27 +69,50 @@ pub fn parse_json_from_schema(
                     None => Ok(Some(serde_json::Value::Array(vec![]))),
                 },
                 SimpleJsonValue::Object => {
-                    let mut props = Map::new();
-
-                    for prop in schema.properties {
-                        let val = parse_json_from_schema(prop.1.resolve(spec)?, spec, settings)?;
-
-                        match val {
-                            Some(v) => props.insert(prop.0, v),
-                            None => None,
-                        };
-                    }
+                    let props = parse_json_object(&schema, spec, settings)?;
 
                     Ok(Some(serde_json::Value::Object(props)))
                 }
             };
         }
         None => {
-            debug!("Couldn't build anything from schema. Returning null...");
+            if schema.properties.len() > 0 {
+                let props = parse_json_object(&schema, spec, settings)?;
+                Ok(Some(serde_json::Value::Object(props)))
+            } else if schema.items.is_some() {
+                let items_schema = match schema.items.unwrap().resolve(spec) {
+                    Ok(s) => parse_json_from_schema(s, spec, settings)?,
+                    Err(e) => return Err(e),
+                };
 
-            Ok(Some(serde_json::Value::Null))
+                match items_schema {
+                    Some(s) => Ok(Some(serde_json::Value::Array(vec![s]))),
+                    None => Ok(Some(serde_json::Value::Array(vec![]))),
+                }
+            } else {
+                debug!("Couldn't build anything from schema. Returning null...");
+
+                Ok(Some(serde_json::Value::Null))
+            }
         }
     }
+}
+
+fn parse_json_object(
+    schema: &Schema,
+    spec: &Spec,
+    settings: &SpecBodySettings,
+) -> Result<Map<String, serde_json::Value>, RefError> {
+    let mut props = Map::new();
+    for prop in &schema.properties {
+        let val = parse_json_from_schema(prop.1.resolve(spec)?, spec, settings)?;
+
+        match val {
+            Some(v) => props.insert(prop.0.to_string(), v),
+            None => None,
+        };
+    }
+    Ok(props)
 }
 
 enum SimpleJsonValue {
