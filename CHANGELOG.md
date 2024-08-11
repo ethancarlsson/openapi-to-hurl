@@ -1,3 +1,12 @@
+## [1.2.1](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.2.0...v1.2.1) (2024-08-11)
+
+
+### Bug Fixes
+
+* When no type is given object or array will now be assumed if "properties" or "items" properties are present ([cdeaee3](https://github.com/ethancarlsson/openapi-to-hurl/commit/cdeaee3ebc3208fa707314598664ac1b0caabb9f))
+
+
+
 # [1.2.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v1.1.0...v1.2.0) (2024-07-28)
 
 
@@ -81,18 +90,6 @@ for `validation` are: `none`, `non-error-code`, `body`, `body-with-optionals`
 * The program will now default to returning results to stdout.
 This is so that we "[e]xpect the output of every program to become the input to another, as yet unknown, program"
 Also, the primary argument name changed from "path" to "input".
-
-
-
-# [0.4.0](https://github.com/ethancarlsson/openapi-to-hurl/compare/v0.3.0...v0.4.0) (2024-02-18)
-
-
-### Features
-
-* Add tags as a filtering option ([6b25371](https://github.com/ethancarlsson/openapi-to-hurl/commit/6b25371ef8b958d83ac76f93308816ce4f9c23c6))
-* Allow user to generate validation for optionals ([e2cea76](https://github.com/ethancarlsson/openapi-to-hurl/commit/e2cea768d230505618f34e6e663fe3ae0e08b7c0))
-* Allow user to ignore and log errors instead of terminating program ([75e4fc1](https://github.com/ethancarlsson/openapi-to-hurl/commit/75e4fc102f91f0410a525f4466006fa72310a90c))
-* Allow users to set log level and improve debug logging ([c8a7d9a](https://github.com/ethancarlsson/openapi-to-hurl/commit/c8a7d9aabcd8f4b35581b594e09caa0198ac9dff))
 
 
 
