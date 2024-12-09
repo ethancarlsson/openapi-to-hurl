@@ -92,6 +92,8 @@ fn out_to_files(
     let mut files_created_count = 0;
     match grouping {
         Grouping::Flat => {
+            fs::create_dir_all(&out_path)
+                .with_context(|| format!("couldn't create directory: {}", out_path.display()))?;
             for file_contents in hurl_files {
                 for file_string in file_contents.1 {
                     let file_path = format!("{}/{}.hurl", out_path.display(), file_string.filename);
